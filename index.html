@@ -1058,7 +1058,32 @@ class NazaFieldPro {
     updateFrentesList() {
         const container = document.getElementById('frentesList');
         if (this.data.frentes.length === 0) { container.innerHTML = `<div class="text-center py-12 bg-white/5 rounded-2xl border-2 border-dashed border-white/20"><svg class="w-16 h-16 mx-auto mb-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg><p class="text-white/60 text-lg">Nenhuma frente cadastrada</p><p class="text-white/40 text-sm mt-2">Importe um plano de lavra ou adicione manualmente</p></div>`; return; }
-        container.innerHTML = this.data.frentes.map((f, i) => { const desvio = f.planejado > 0 ? ((f.realizado - f.planejado) / f.planejado * 100).toFixed(1) : 0; const statusColors = { pendente: 'pending', em_andamento: 'pending', concluida: 'completed', bloqueada: 'pending' }; const statusLabels = { pendente: 'PENDENTE', em_andamento: 'EM ANDAMENTO', concluida: 'CONCLUÍDA', bloqueada: 'BLOQUEADA' }; const hasFotos = f.fotos && f.fotos.length > 0; return `<div class="glass-card ${statusColors[f.status]} rounded-xl p-4 cursor-pointer transform transition-all hover:scale-[1.02]" onclick="app.editFrente(${i})"><div class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5 accent-blue-500" data-frente-idx="${i}" onclick="event.stopPropagation()"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-white text-lg">${f.codigo}</h4>${hasFotos ? `<span class="bg-naza-success text-white text-xs px-2 py-1 rounded-full">${f.fotos.length} foto(s)</span>` : ''}</div><p class="text-naza-accent text-sm">${f.destino || 'Sem destino'}</p>${f.obs ? `<p class="text-white/60 text-xs mt-1 line-clamp-2">${f.obs}</p>` : ''}</div><div class="text-right ml-4"><span class="inline-block px-3 py-1 rounded-full text-xs font-bold ${f.status === 'concluida' ? 'bg-naza-success text-white' : f.status === 'bloqueada' ? 'bg-naza-danger text-white' : 'bg-naza-warning text-naza-dark'} mb-2">${statusLabels[f.status]}</span><div class="text-sm"><p class="text-white/70">Plan: <span class="text-white font-bold">${parseFloat(f.planejado).toFixed(2)}t</span></p><p class="text-naza-success">Real: <span class="font-bold">${parseFloat(f.realizado).toFixed(2)}t</span></p>${f.planejado > 0 ? `<p class="text-xs ${desvio >= 0 ? 'text-naza-success' : 'text-naza-warning'}">${desvio >= 0 ? '+' : ''}${desvio}%</p>` : ''}</div></div></div></div>`; }).join('');
+
+        const origemTeor = (f, usinaRef, key) => {
+          const v = f?.[key];
+          if (v != null && v !== '' && Number.isFinite(Number(v))) return 'Frente';
+          const recon = this.data?.reconciliacao?.[usinaRef] || {};
+          if (recon?.[key]?.real) return `Recon ${usinaRef.toUpperCase()} Real`;
+          if (recon?.[key]?.plan) return `Recon ${usinaRef.toUpperCase()} Plan`;
+          return 'Padrão';
+        };
+
+        container.innerHTML = this.data.frentes.map((f, i) => {
+          const desvio = f.planejado > 0 ? ((f.realizado - f.planejado) / f.planejado * 100).toFixed(1) : 0;
+          const statusColors = { pendente: 'pending', em_andamento: 'pending', concluida: 'completed', bloqueada: 'pending' };
+          const statusLabels = { pendente: 'PENDENTE', em_andamento: 'EM ANDAMENTO', concluida: 'CONCLUÍDA', bloqueada: 'BLOQUEADA' };
+          const hasFotos = f.fotos && f.fotos.length > 0;
+          const usinaRef = String(f.usina || '').includes('3') ? 'u3' : 'u2';
+          const q = (typeof this.estimateFrontQuality === 'function') ? this.estimateFrontQuality(f, usinaRef) : {fe:0,pc:0,ppc:0};
+          const feTxt = q.fe ? `${q.fe.toFixed(2)}%` : '—';
+          const pcTxt = (q.pc || q.pc === 0) ? `${q.pc.toFixed(3)}%` : '—';
+          const ppcTxt = (q.ppc || q.ppc === 0) ? `${q.ppc.toFixed(2)}%` : '—';
+          const feSrc = origemTeor(f, usinaRef, 'fe');
+          const pcSrc = origemTeor(f, usinaRef, 'pc');
+          const ppcSrc = origemTeor(f, usinaRef, 'ppc');
+
+          return `<div class="glass-card ${statusColors[f.status]} rounded-xl p-4 cursor-pointer transform transition-all hover:scale-[1.02]" onclick="app.editFrente(${i})"><div class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5 accent-blue-500" data-frente-idx="${i}" onclick="event.stopPropagation()"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-white text-lg">${f.codigo}</h4>${hasFotos ? `<span class="bg-naza-success text-white text-xs px-2 py-1 rounded-full">${f.fotos.length} foto(s)</span>` : ''}</div><p class="text-naza-accent text-sm">${f.destino || 'Sem destino'}</p><p class="text-white/70 text-xs mt-1"><strong>Fe</strong> ${feTxt} <span class="text-white/50">(${feSrc})</span> &nbsp; <strong>Pc</strong> ${pcTxt} <span class="text-white/50">(${pcSrc})</span> &nbsp; <strong>PPC</strong> ${ppcTxt} <span class="text-white/50">(${ppcSrc})</span></p>${f.obs ? `<p class="text-white/60 text-xs mt-1 line-clamp-2">${f.obs}</p>` : ''}</div><div class="text-right ml-4"><span class="inline-block px-3 py-1 rounded-full text-xs font-bold ${f.status === 'concluida' ? 'bg-naza-success text-white' : f.status === 'bloqueada' ? 'bg-naza-danger text-white' : 'bg-naza-warning text-naza-dark'} mb-2">${statusLabels[f.status]}</span><div class="text-sm"><p class="text-white/70">Plan: <span class="text-white font-bold">${parseFloat(f.planejado).toFixed(2)}t</span></p><p class="text-naza-success">Real: <span class="font-bold">${parseFloat(f.realizado).toFixed(2)}t</span></p>${f.planejado > 0 ? `<p class="text-xs ${desvio >= 0 ? 'text-naza-success' : 'text-naza-warning'}">${desvio >= 0 ? '+' : ''}${desvio}%</p>` : ''}</div></div></div></div>`;
+        }).join('');
     }
 
     deleteSelectedFrentes() {
@@ -1095,7 +1120,35 @@ class NazaFieldPro {
     removerFoto(idx) { this.tempFotos.splice(idx, 1); this.atualizarPreviewFotos(); }
     saveFrente() { const codigo = document.getElementById('frenteCodigo').value.trim().toUpperCase(); const planejado = parseFloat(document.getElementById('frentePlan').value) || 0; const realizado = parseFloat(document.getElementById('frenteReal').value) || 0; const destino = document.getElementById('frenteDestino').value; const status = document.getElementById('frenteStatus').value; const obs = document.getElementById('frenteObs').value.trim(); if (!codigo) { this.showToast('Digite o código da frente!', 'error'); return; } const frente = { codigo, planejado, realizado, destino, status, obs, fotos: this.tempFotos, data: new Date().toISOString() }; if (this.currentFrenteIndex !== null) this.data.frentes[this.currentFrenteIndex] = frente; else this.data.frentes.push(frente); this.saveData(); this.updateUI(); this.closeModalFrente(); this.showToast(this.currentFrenteIndex !== null ? 'Frente atualizada!' : 'Frente adicionada!'); }
     closeModalFrente() { this.closeModal('modalFrente'); this.currentFrenteIndex = null; this.tempFotos = []; }
-    switchTab(tab) { document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden')); document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('active', 'bg-naza-primary', 'text-white'); el.classList.add('text-gray-600'); }); document.getElementById('tab-' + tab).classList.remove('hidden'); document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active'); if (tab === 'reconciliacao') setTimeout(() => this.updateCharts(), 100); else if (tab === 'retomadas') setTimeout(() => this.updateChartBR02(), 100); else if (tab === 'relatorio') this.atualizarPreviewRelatorio(); }
+    switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('active', 'bg-naza-primary', 'text-white'); el.classList.add('text-gray-600'); });
+        document.getElementById('tab-' + tab).classList.remove('hidden');
+        document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+
+        const safeResize = (chart) => { try { chart && chart.resize && chart.resize(); } catch (e) {} };
+
+        if (tab === 'reconciliacao') {
+            setTimeout(() => {
+                this.updateCharts();
+                safeResize(this.charts?.u2);
+                safeResize(this.charts?.u3);
+            }, 120);
+        } else if (tab === 'retomadas') {
+            setTimeout(() => {
+                this.updateChartBR02();
+                safeResize(this.charts?.br02);
+            }, 120);
+        } else if (tab === 'simulacao') {
+            setTimeout(() => {
+                if (typeof this.runSimulation === 'function') this.runSimulation();
+                safeResize(this.charts?.simForecast);
+                safeResize(this.charts?.simQuality);
+            }, 120);
+        } else if (tab === 'relatorio') {
+            this.atualizarPreviewRelatorio();
+        }
+    }
     showModal(id) { const modal = document.getElementById(id); modal.classList.remove('hidden'); if (!modal.classList.contains('flex')) modal.classList.add('flex'); }
     closeModal(id) { const modal = document.getElementById(id); modal.classList.add('hidden'); modal.classList.remove('flex'); }
 
@@ -1248,8 +1301,9 @@ class NazaFieldPro {
         this.data.frentes.push({ codigo: 'FL-24AV-1076/ES', destino: 'CINTURÃO', planejado: 1286, realizado: 0, status: 'pendente', fotos: [] });
         this.data.frentes.push({ codigo: 'BLOCOS PISCINA', destino: 'CAVA GERMANO', planejado: 2538, realizado: 0, status: 'pendente', fotos: [] });
         // Reconciliação
-        this.data.reconciliacao.u2.rom.plan = 41.26; this.data.reconciliacao.u2.fe.plan = 0.041; this.data.reconciliacao.u2.ppc.plan = 1.95;
-        this.data.reconciliacao.u3.rom.plan = 41.20; this.data.reconciliacao.u3.fe.plan = 0.040; this.data.reconciliacao.u3.ppc.plan = 2.88;
+        // ROM = massa (t). Fe/Pc/PPC = teores (%).
+        this.data.reconciliacao.u2.rom.plan = 0; this.data.reconciliacao.u2.fe.plan = 41.26; this.data.reconciliacao.u2.ppc.plan = 1.95;
+        this.data.reconciliacao.u3.rom.plan = 0; this.data.reconciliacao.u3.fe.plan = 41.20; this.data.reconciliacao.u3.ppc.plan = 2.88;
         // Retomadas
         this.data.retomadas = [
             { origem: 'FAZENDÃO', quantidade: 2500, fe: 0, status: 'programada', data: new Date().toISOString(), planejado: true },
@@ -2443,7 +2497,7 @@ const app = new NazaFieldPro();
           <!-- ALERTAS INTELIGENTES -->
           <div id="smartAlertsContainer" class="mb-8"></div>
 
-          <!-- GRÁFICO DE PROJEÇÃO -->
+          <!-- GRÁFICO DE PROJEÇÃO (full width) -->
           <div class="glass-panel rounded-2xl p-6 mb-8" style="background:rgba(255,255,255,0.95)">
             <div class="flex items-center justify-between mb-4">
               <h4 class="text-lg font-bold text-primary">Projeção Horária de Massa e Qualidade</h4>
@@ -2453,6 +2507,18 @@ const app = new NazaFieldPro();
               </div>
             </div>
             <div style="height:350px"><canvas id="chartProjecaoHoraria"></canvas></div>
+          </div>
+
+          <!-- Projeção diária + Roteamento (como no Pro4Seek) -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="glass-panel rounded-2xl p-6" style="background:rgba(255,255,255,0.95)">
+              <h4 class="text-lg font-bold text-primary mb-4">Projeção diária por usina</h4>
+              <div style="height:260px"><canvas id="simQualityChart"></canvas></div>
+            </div>
+            <div class="glass-panel rounded-2xl p-6" style="background:rgba(255,255,255,0.95)">
+              <h4 class="text-lg font-bold text-primary mb-4">Roteamento de pilhas / desviador</h4>
+              <div id="simRoutingTable"></div>
+            </div>
           </div>
 
           <!-- COMPARATIVO DE CENÁRIOS -->
@@ -3162,8 +3228,8 @@ const app = new NazaFieldPro();
 <script id="advanced-field-v3-script">
 (function(){
   const DEFAULT_RECON = {
-    u2:{rom:{plan:0,real:0,unit:'%Fe'},fe:{plan:0,real:0,unit:'%'},ppc:{plan:0,real:0,unit:'%'},pc:{plan:0,real:0,unit:'%'},ppcc:{plan:0,real:0,unit:'%'}},
-    u3:{rom:{plan:0,real:0,unit:'%Fe'},fe:{plan:0,real:0,unit:'%'},ppc:{plan:0,real:0,unit:'%'},pc:{plan:0,real:0,unit:'%'},ppcc:{plan:0,real:0,unit:'%'}}
+    u2:{rom:{plan:0,real:0,unit:'t'},fe:{plan:0,real:0,unit:'%'},ppc:{plan:0,real:0,unit:'%'},pc:{plan:0,real:0,unit:'%'},ppcc:{plan:0,real:0,unit:'%'}},
+    u3:{rom:{plan:0,real:0,unit:'t'},fe:{plan:0,real:0,unit:'%'},ppc:{plan:0,real:0,unit:'%'},pc:{plan:0,real:0,unit:'%'},ppcc:{plan:0,real:0,unit:'%'}}
   };
   const DEFAULT_SIM = {massaHora:1800, teorHora:41.3, horasTurno:12, recuperacao:96, usinaAlvo:'Usina 2', terceiraUsina:0};
   const TEMPLATE_HEADERS = {
@@ -3415,7 +3481,7 @@ const app = new NazaFieldPro();
   app.estimateFrontQuality = function(frente, usinaRef){
     const ref = this.data.reconciliacao?.[usinaRef] || {};
     return {
-      fe: frente.fe != null && frente.fe !== '' ? num(frente.fe) : num(ref.rom?.real || ref.rom?.plan || 41),
+      fe: frente.fe != null && frente.fe !== '' ? num(frente.fe) : num(ref.fe?.real || ref.fe?.plan || 41),
       pc: frente.pc != null && frente.pc !== '' ? num(frente.pc) : num(ref.pc?.real || ref.pc?.plan || 0.055),
       ppc: frente.ppc != null && frente.ppc !== '' ? num(frente.ppc) : num(ref.ppc?.real || ref.ppc?.plan || 2.2)
     };
@@ -3519,7 +3585,7 @@ const app = new NazaFieldPro();
       acc.ppc += q.ppc * item.massa;
       return acc;
     }, {fe:0,pc:0,ppc:0});
-    const mixFe = baseQuality.fe / totalMass || num(this.data.reconciliacao?.[usinaRef]?.rom?.real || this.data.reconciliacao?.[usinaRef]?.rom?.plan || 41.3);
+    const mixFe = baseQuality.fe / totalMass || num(this.data.reconciliacao?.[usinaRef]?.fe?.real || this.data.reconciliacao?.[usinaRef]?.fe?.plan || 41.3);
     const mixPc = baseQuality.pc / totalMass || num(this.data.reconciliacao?.[usinaRef]?.pc?.real || this.data.reconciliacao?.[usinaRef]?.pc?.plan || 0.055);
     const mixPpc = baseQuality.ppc / totalMass || num(this.data.reconciliacao?.[usinaRef]?.ppc?.real || this.data.reconciliacao?.[usinaRef]?.ppc?.plan || 2.1);
 
@@ -3915,7 +3981,7 @@ const app = new NazaFieldPro();
     }, {fe:0, pc:0, ppc:0});
 
     const reconRef = this.data.reconciliacao?.[usinaKey === 'u4' ? 'u3' : usinaKey] || {};
-    const mixFe = totalMass ? baseQuality.fe / totalMass : num(reconRef.rom?.real || reconRef.rom?.plan || 41.3);
+    const mixFe = totalMass ? baseQuality.fe / totalMass : num(reconRef.fe?.real || reconRef.fe?.plan || 41.3);
     const mixPc = totalMass ? baseQuality.pc / totalMass : num(reconRef.pc?.real || reconRef.pc?.plan || 0.055);
     const mixPpc = totalMass ? baseQuality.ppc / totalMass : num(reconRef.ppc?.real || reconRef.ppc?.plan || 2.1);
 
@@ -4066,12 +4132,19 @@ const app = new NazaFieldPro();
     const customSheets = (this.data.sheetOrder || []).filter(name => !TEMPLATE_SHEETS.includes(name));
     let nextPageNo = reportBook.querySelectorAll('.report-page').length + 1;
 
+    const getTechPageAnchor = () => reportBook.querySelector('.report-page:last-child');
+    const insertBeforeTechPage = (html) => {
+      const anchor = getTechPageAnchor();
+      if (anchor) anchor.insertAdjacentHTML('beforebegin', html);
+      else reportBook.insertAdjacentHTML('beforeend', html);
+    };
+
     customSheets.forEach(name => {
       const rows = this.data.sheetClones[name] || [];
       const head = rows[0] || [];
       const body = rows.slice(1, 11).filter(row => row.some(cell => String(cell ?? '').trim()));
       if (!body.length) return;
-      reportBook.insertAdjacentHTML('beforeend', `
+      insertBeforeTechPage(`
         <section class="report-page">
           <div class="rp-header"><div>ANEXO OPERACIONAL – ${name}</div><div class="brand">SAMARCO</div></div>
           <div class="rp-body"><table class="report-table"><thead><tr>${head.map(h=>`<th>${h || '-'}</th>`).join('')}</tr></thead><tbody>${body.map(row=>`<tr>${head.map((_,i)=>`<td>${row[i] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
@@ -4217,6 +4290,7 @@ const app = new NazaFieldPro();
     const ds = this.getSimulationDataset();
     if (!(ds.turnoMass > 0 || ds.mixFe > 0)) return;
 
+    // KPI pages: keep as the LAST pages ("últimos slides")
     reportBook.insertAdjacentHTML('beforeend', `
       <section class="report-page">
         <div class="rp-header"><div>SIMULAÇÃO KPI – PROJEÇÕES</div><div class="brand">SAMARCO</div></div>
@@ -4259,6 +4333,14 @@ const app = new NazaFieldPro();
         </div>
         <div class="rp-page-no">${nextPageNo++}</div>
       </section>`);
+
+    // Renumera páginas para evitar qualquer “sobreposição” visual por numeração errada
+    try {
+      reportBook.querySelectorAll('.report-page').forEach((page, idx) => {
+        const el = page.querySelector('.rp-page-no');
+        if (el) el.textContent = String(idx + 1);
+      });
+    } catch(e) {}
 
     setTimeout(() => {
       try {
@@ -4342,6 +4424,84 @@ const app = new NazaFieldPro();
   app.__v6StablePatchApplied = true;
 
   const num = (v,d=0)=>{ v=Number(v); return Number.isFinite(v)?v:d; };
+
+  // ===== Reconciliação: puxar planejado das planilhas e sincronizar UI =====
+  app.applyReconFromPlanilhas = function(){
+    const clones = this.data?.sheetClones || {};
+    const apply = (usinaRef, sheetName) => {
+      const rows = clones[sheetName];
+      if (!Array.isArray(rows) || rows.length < 2) return false;
+      // detect colunas: Parâmetro | Planejado | Realizado | Unidade
+      const head = rows[0] || [];
+      const idxParam = 0;
+      const idxPlan = head.findIndex(h => String(h||'').toLowerCase().includes('planej')) >= 0 ? head.findIndex(h => String(h||'').toLowerCase().includes('planej')) : 1;
+      const idxReal = head.findIndex(h => String(h||'').toLowerCase().includes('real')) >= 0 ? head.findIndex(h => String(h||'').toLowerCase().includes('real')) : 2;
+      let changed = false;
+      rows.slice(1).forEach(r => {
+        const p = String(r?.[idxParam] || '').toLowerCase();
+        if (!p) return;
+        const plan = num(r?.[idxPlan]);
+        const real = num(r?.[idxReal]);
+        const key =
+          p.includes('rom') ? 'rom' :
+          (p === 'fe' || p.includes(' fe')) ? 'fe' :
+          (p.includes('ppcc') || p.includes('ppc c') || p.includes('ppc_c') || p.includes('ppc c')) ? 'ppcc' :
+          (p === 'pc' || p.includes(' pc')) ? 'pc' :
+          p.includes('ppc') ? 'ppc' : null;
+        if (!key) return;
+        this.data.reconciliacao = this.data.reconciliacao || {};
+        this.data.reconciliacao[usinaRef] = this.data.reconciliacao[usinaRef] || {};
+        this.data.reconciliacao[usinaRef][key] = this.data.reconciliacao[usinaRef][key] || {plan:0,real:0};
+        if (plan && !num(this.data.reconciliacao[usinaRef][key].plan)) { this.data.reconciliacao[usinaRef][key].plan = plan; changed = true; }
+        if (real && !num(this.data.reconciliacao[usinaRef][key].real)) { this.data.reconciliacao[usinaRef][key].real = real; changed = true; }
+      });
+      return changed;
+    };
+    const c1 = apply.call(this, 'u2', 'Reconciliação_U2');
+    const c2 = apply.call(this, 'u3', 'Reconciliação_U3');
+    if (c1 || c2) { try { this.saveData(); } catch(e) {} }
+    return !!(c1 || c2);
+  };
+
+  app.syncReconUI = function(){
+    const setIfNotActive = (selector, value) => {
+      const el = document.querySelector(selector);
+      if (!el) return;
+      if (document.activeElement === el) return;
+      el.value = (value == null ? '' : value);
+    };
+
+    const calcStatus = (plan, real) => {
+      let desvioText = '--';
+      let statusText = 'Aguardando dados';
+      let statusClass = 'text-purple-500';
+      if (plan > 0) {
+        const desvio = ((real - plan) / plan * 100);
+        desvioText = (desvio >= 0 ? '+' : '') + desvio.toFixed(2) + '%';
+        if (Math.abs(desvio) <= 5) { statusText = 'DENTRO DO LIMITE ✓'; statusClass = 'text-naza-success'; }
+        else if (Math.abs(desvio) <= 10) { statusText = 'ATENÇÃO ⚠'; statusClass = 'text-naza-warning'; }
+        else { statusText = 'DESVIO CRÍTICO ✗'; statusClass = 'text-naza-danger'; }
+      }
+      return {desvioText, statusText, statusClass};
+    };
+
+    ['u2','u3'].forEach(usina => {
+      const u = this.data?.reconciliacao?.[usina] || {};
+      ['rom','fe','ppc'].forEach(tipo => {
+        setIfNotActive(`[data-field="${usina}_${tipo}_plan"]`, num(u?.[tipo]?.plan) ? num(u?.[tipo]?.plan) : '');
+        setIfNotActive(`[data-field="${usina}_${tipo}_real"]`, num(u?.[tipo]?.real) ? num(u?.[tipo]?.real) : '');
+        const plan = num(u?.[tipo]?.plan);
+        const real = num(u?.[tipo]?.real);
+        const s = calcStatus(plan, real);
+        const dv = document.getElementById(`${usina}_${tipo}_desvio`);
+        const st = document.getElementById(`${usina}_${tipo}_status`);
+        if (dv) dv.textContent = s.desvioText;
+        if (st) { st.textContent = s.statusText; st.className = 'text-xs mt-1 ' + s.statusClass; }
+      });
+    });
+
+    try { this.updateCharts && this.updateCharts(); } catch(e) {}
+  };
 
   app.ensureSimulationScreen = function(){
     const simTab = document.getElementById('tab-simulacao');
@@ -4428,8 +4588,25 @@ const app = new NazaFieldPro();
   if (oldSwitchTab) {
     app.switchTab = function(tab){
       const out = oldSwitchTab(tab);
-      if (tab === 'reconciliacao') setTimeout(()=>this.updateCharts(), 60);
-      if (tab === 'simulacao') setTimeout(()=>{ this.ensureSimulationScreen(); try{ this.runSimulation(); }catch(e){console.error(e);} }, 60);
+      const safeResize = (c)=>{ try{ c && c.resize && c.resize(); }catch(e){} };
+      if (tab === 'reconciliacao') {
+        setTimeout(()=>{
+          try { this.applyReconFromPlanilhas && this.applyReconFromPlanilhas(); } catch(e) {}
+          try { this.syncReconUI && this.syncReconUI(); } catch(e) {}
+          try { this.ensureReconCharts(); } catch(e) {}
+          try { this.updateCharts(); } catch(e) {}
+          safeResize(this.charts?.u2);
+          safeResize(this.charts?.u3);
+        }, 160);
+      }
+      if (tab === 'simulacao') {
+        setTimeout(()=>{
+          try { this.ensureSimulationScreen(); } catch(e) {}
+          try { this.runSimulation(); } catch(e) { console.error(e); }
+          safeResize(this.charts?.simForecast);
+          safeResize(this.charts?.simQuality);
+        }, 160);
+      }
       return out;
     };
   }
@@ -4452,6 +4629,12 @@ const app = new NazaFieldPro();
       this.__runningSimulation = false;
     }
   };
+
+  // inicialização (offline-safe)
+  setTimeout(() => {
+    try { app.applyReconFromPlanilhas && app.applyReconFromPlanilhas(); } catch(e) {}
+    try { app.syncReconUI && app.syncReconUI(); } catch(e) {}
+  }, 600);
 
   const oldPreview = app.atualizarPreviewRelatorio ? app.atualizarPreviewRelatorio.bind(app) : null;
   if (oldPreview) {
@@ -5166,17 +5349,43 @@ setInterval(() => {
     const u3 = this.data.reconciliacao?.u3 || {};
     const retomadas = this.data.retomadas || [];
 
+    const isFilled = (v) => v != null && v !== '' && Number.isFinite(Number(v));
+
+    const reconSrc = (usinaRef, key) => {
+      const r = this.data?.reconciliacao?.[usinaRef]?.[key] || {};
+      if (num(r.real)) return `Recon ${String(usinaRef).toUpperCase()} Real`;
+      if (num(r.plan)) return `Recon ${String(usinaRef).toUpperCase()} Plan`;
+      return 'Padrão';
+    };
+
+    const frenteTeorSrc = (frente, usinaRef, key) => isFilled(frente?.[key]) ? 'Frente' : reconSrc(usinaRef, key);
+
     // --- FRENTES INLINE ---
     let frentesHTML = '';
     frentes.forEach((f, i) => {
+      const usinaRef = String(f.usina || '').includes('3') ? 'u3' : 'u2';
+      const q = (typeof this.estimateFrontQuality === 'function') ? this.estimateFrontQuality(f, usinaRef) : {fe:0,pc:0,ppc:0};
+      const feSrc = frenteTeorSrc(f, usinaRef, 'fe');
+      const pcSrc = frenteTeorSrc(f, usinaRef, 'pc');
+      const ppcSrc = frenteTeorSrc(f, usinaRef, 'ppc');
       frentesHTML += `
         <div class="sim-inline-item" style="border-left:3px solid #ec4899">
           <label>${f.codigo || 'Frente '+(i+1)}</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">
             <div><span style="font-size:9px;color:#94a3b8">Plan (t)</span><input type="number" step="0.01" value="${num(f.planejado)}" onchange="app.updateFrenteFromSim(${i},'planejado',this.value)"></div>
             <div><span style="font-size:9px;color:#94a3b8">Real (t)</span><input type="number" step="0.01" value="${num(f.realizado)}" onchange="app.updateFrenteFromSim(${i},'realizado',this.value)"></div>
-            <div><span style="font-size:9px;color:#94a3b8">Fe %</span><input type="number" step="0.01" value="${f.fe!=null&&f.fe!==''?num(f.fe):''}" onchange="app.updateFrenteFromSim(${i},'fe',this.value)"></div>
-            <div><span style="font-size:9px;color:#94a3b8">PPC %</span><input type="number" step="0.01" value="${f.ppc!=null&&f.ppc!==''?num(f.ppc):''}" onchange="app.updateFrenteFromSim(${i},'ppc',this.value)"></div>
+            <div>
+              <span style="font-size:9px;color:#94a3b8">Fe % <span style="color:#cbd5e1">(${feSrc})</span></span>
+              <input type="number" step="0.01" value="${isFilled(f.fe) ? num(f.fe) : (q.fe ? num(q.fe) : '')}" onchange="app.updateFrenteFromSim(${i},'fe',this.value)">
+            </div>
+            <div>
+              <span style="font-size:9px;color:#94a3b8">Pc % <span style="color:#cbd5e1">(${pcSrc})</span></span>
+              <input type="number" step="0.001" value="${isFilled(f.pc) ? num(f.pc) : (q.pc || q.pc === 0 ? num(q.pc) : '')}" onchange="app.updateFrenteFromSim(${i},'pc',this.value)">
+            </div>
+            <div>
+              <span style="font-size:9px;color:#94a3b8">PPC % <span style="color:#cbd5e1">(${ppcSrc})</span></span>
+              <input type="number" step="0.01" value="${isFilled(f.ppc) ? num(f.ppc) : (q.ppc || q.ppc === 0 ? num(q.ppc) : '')}" onchange="app.updateFrenteFromSim(${i},'ppc',this.value)">
+            </div>
           </div>
         </div>`;
     });
@@ -5239,12 +5448,17 @@ setInterval(() => {
     // --- RETOMADAS INLINE ---
     let retHTML = '';
     retomadas.forEach((r, i) => {
+      const sectionKey = String(r.sectionKey || r.sheetName || '');
+      const usinaRef = sectionKey.includes('BR03') ? 'u3' : 'u2';
+      const feDefault = num(this.data?.reconciliacao?.[usinaRef]?.fe?.real || this.data?.reconciliacao?.[usinaRef]?.fe?.plan || 0);
+      const feVal = (r.fe != null && r.fe !== '' && Number(r.fe) > 0) ? num(r.fe) : (feDefault > 0 ? feDefault : 0);
+      const feSrc = (r.fe != null && r.fe !== '' && Number(r.fe) > 0) ? 'Retomada' : reconSrc(usinaRef, 'fe');
       retHTML += `
         <div class="sim-inline-item" style="border-left:3px solid #10b981">
           <label>${r.origem || 'Pilha '+(i+1)}</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">
             <div><span style="font-size:9px;color:#94a3b8">Qtd (t)</span><input type="number" step="0.01" value="${num(r.quantidade)}" onchange="app.updateRetomadaFromSim(${i},'quantidade',this.value)"></div>
-            <div><span style="font-size:9px;color:#94a3b8">Fe %</span><input type="number" step="0.001" value="${num(r.fe)}" onchange="app.updateRetomadaFromSim(${i},'fe',this.value)"></div>
+            <div><span style="font-size:9px;color:#94a3b8">Fe % <span style="color:#cbd5e1">(${feSrc})</span></span><input type="number" step="0.001" value="${feVal ? feVal : ''}" onchange="app.updateRetomadaFromSim(${i},'fe',this.value)"></div>
           </div>
           <div class="origin">${r.status||'programada'} | ${r.sectionKey||''}</div>
         </div>`;
@@ -5262,18 +5476,25 @@ setInterval(() => {
     // --- RESUMO (read-only) ---
     const totalReal = frentes.reduce((s,f) => s + num(f.realizado), 0);
     const totalPlan = frentes.reduce((s,f) => s + num(f.planejado), 0);
-    // Média ponderada por massa (realizado) - como na operação real de lavra
-    const frentesComFe = frentes.filter(f => f.fe != null && f.fe !== 0 && f.fe !== '' && num(f.realizado) > 0);
-    const totalMassaFe = frentesComFe.reduce((s,f) => s + num(f.realizado), 0);
-    const mediaFe = totalMassaFe > 0 ? frentesComFe.reduce((s,f) => s + num(f.fe) * num(f.realizado), 0) / totalMassaFe : 0;
-
-    const frentesComPc = frentes.filter(f => f.pc != null && f.pc !== 0 && f.pc !== '' && num(f.realizado) > 0);
-    const totalMassaPc = frentesComPc.reduce((s,f) => s + num(f.realizado), 0);
-    const mediaPc = totalMassaPc > 0 ? frentesComPc.reduce((s,f) => s + num(f.pc) * num(f.realizado), 0) / totalMassaPc : 0;
-
-    const frentesComPpc = frentes.filter(f => f.ppc != null && f.ppc !== 0 && f.ppc !== '' && num(f.realizado) > 0);
-    const totalMassaPpc = frentesComPpc.reduce((s,f) => s + num(f.realizado), 0);
-    const mediaPpc = totalMassaPpc > 0 ? frentesComPpc.reduce((s,f) => s + num(f.ppc) * num(f.realizado), 0) / totalMassaPpc : 0;
+    // Média ponderada por massa (realizado) - usando teor da frente OU fallback técnico (recon)
+    const wAvg = (key) => {
+      let sumM = 0;
+      let sumMV = 0;
+      frentes.forEach(f => {
+        const m = num(f.realizado);
+        if (m <= 0) return;
+        const usinaRef = String(f.usina || '').includes('3') ? 'u3' : 'u2';
+        const q = (typeof this.estimateFrontQuality === 'function') ? this.estimateFrontQuality(f, usinaRef) : {};
+        const v = num(q[key]);
+        if (v <= 0) return;
+        sumM += m;
+        sumMV += m * v;
+      });
+      return sumM > 0 ? (sumMV / sumM) : 0;
+    };
+    const mediaFe = wAvg('fe');
+    const mediaPc = wAvg('pc');
+    const mediaPpc = wAvg('ppc');
 
     const sourcePanel = document.createElement('div');
     sourcePanel.className = 'sim-source-panel';
@@ -5453,49 +5674,62 @@ setInterval(() => {
     setText('sliderTerceiraValue', terceira + '%');
     setText('toggleUsinaLabel', usina3 ? 'Usina 3' : 'Usina 2');
 
-    // Calculate
-    const turno = massa * horas;
-    const dia = turno * 2;
-    const massaRec = turno * (rec / 100);
-    const metalTurno = massaRec * (teor / 100);
-
-    // Use weighted average from frentes if available
-    const frentes = (app.data && app.data.frentes) || [];
-    let blendFe = teor;
-    if (frentes.length > 0) {
-      let sumMF = 0, sumM = 0;
-      frentes.forEach(f => {
-        const m = parseFloat(f.realizado || f.planejado || 0);
-        const fe = parseFloat(f.fe || 0);
-        if (m > 0 && fe > 0) { sumMF += m * fe; sumM += m; }
-      });
-      if (sumM > 0) blendFe = sumMF / sumM;
-    }
-
-    // Update previews
-    setText('previewTurno', Math.round(turno).toLocaleString('pt-BR'));
-    setText('previewDia', Math.round(dia).toLocaleString('pt-BR'));
-    setText('previewMetalTurno', Math.round(metalTurno).toLocaleString('pt-BR'));
-    setText('previewBlend', blendFe.toFixed(1) + '%');
-
-    // Sync with hidden original fields for compatibility
+    // Sync with hidden fields that drive o motor "real"
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
     setVal('sim_massaHora', massa);
-    setVal('sim_teorHora', teor);
+    setVal('sim_teorHora', teor); // usado só como input manual; o motor calcula mixFe real
     setVal('sim_horasTurno', horas);
     setVal('sim_recuperacao', rec);
     setVal('sim_terceiraUsina', terceira);
     const sel = document.getElementById('sim_usinaAlvo');
     if (sel) sel.value = usina3 ? 'Usina 3' : 'Usina 2';
 
-    // Update KPI cards
-    app.updateEnhancedKPIs(massa, teor, rec, metalTurno, horas);
-    // Update alerts
-    app.updateSmartAlerts(massa, teor, rec, terceira);
-    // Update gauges
-    app.updateEnhancedGauges(blendFe, rec, massa, horas);
-    // Update Firebase status
-    app.updateFirebaseStatus();
+    // Roda o motor de simulação (frentes + recon + retomadas/desviador)
+    try { if (typeof app.runSimulation === 'function') app.runSimulation(); } catch(e){}
+    const ds = (typeof app.getSimulationDataset === 'function') ? app.getSimulationDataset() : null;
+
+    const mixFe = ds ? Number(ds.mixFe || 0) : teor;
+    const mixPc = ds ? Number(ds.mixPc || 0) : 0;
+    const mixPpc = ds ? Number(ds.mixPpc || 0) : 0;
+    const horasTurno = ds ? Number(ds.horasTurno || horas) : horas;
+    const turnoMass = ds ? Number(ds.turnoMass || 0) : (massa * horas);
+    const dayMass = ds ? Number(ds.dayMass || 0) : (turnoMass * 2);
+    const metalTurno = ds ? Number(ds.metalTurno || 0) : (turnoMass * (rec/100) * (mixFe/100));
+    const recovery = ds ? Number(ds.recovery ?? rec) : rec;
+    const effectiveHourMass = ds ? Number(ds.effectiveHourMass || massa) : massa;
+
+    // Previews (sempre pelo cálculo real)
+    setText('previewTurno', Math.round(turnoMass).toLocaleString('pt-BR'));
+    setText('previewDia', Math.round(dayMass).toLocaleString('pt-BR'));
+    setText('previewMetalTurno', Math.round(metalTurno).toLocaleString('pt-BR'));
+    setText('previewBlend', (mixFe || teor).toFixed(2) + '%');
+
+    // KPI cards/gauges/alerts passam a refletir o motor real
+    app.updateEnhancedKPIs(effectiveHourMass, mixFe || teor, recovery, metalTurno, horasTurno);
+    app.updateSmartAlerts(effectiveHourMass, mixFe || teor, recovery, terceira);
+    app.updateEnhancedGauges(mixFe || teor, recovery, effectiveHourMass, horasTurno);
+
+    // Atualiza o gráfico full-width com Fe/Pc/PPC + massa (sem "random")
+    try {
+      if (!app._simProjecao) app.initProjecaoChart();
+      if (app._simProjecao && ds && Array.isArray(ds.hourly)) {
+        const labels = ds.hourly.map(h => h.label);
+        const massSeries = ds.hourly.map(h => +(Number(h.massa || 0).toFixed(0)));
+        const feSeries = ds.hourly.map(h => +(Number(h.fe || 0).toFixed(2)));
+        const pcSeries = ds.hourly.map(h => +(Number(h.pc || 0).toFixed(3)));
+        const ppcSeries = ds.hourly.map(h => +(Number(h.ppc || 0).toFixed(2)));
+
+        app._simProjecao.data.labels = labels;
+        app._simProjecao.data.datasets[0].data = massSeries;
+        app._simProjecao.data.datasets[1].data = feSeries;
+        app._simProjecao.data.datasets[2].data = pcSeries;
+        app._simProjecao.data.datasets[3].data = ppcSeries;
+        app._simProjecao.update('none');
+      }
+    } catch(e) {}
+
+    // Status (sempre offline-safe)
+    try { app.updateFirebaseStatus && app.updateFirebaseStatus(); } catch(e){}
   };
 
   // ===== KPI CARDS =====
@@ -5586,18 +5820,27 @@ setInterval(() => {
     const horas = Array.from({length:12},(_,i)=>'H'+(i+1));
     const massa = parseFloat(document.getElementById('sliderMassa')?.value || 1800);
     const teor = parseFloat(document.getElementById('sliderTeor')?.value || 41.3);
-    const massaData = horas.map(()=> massa + (Math.random()-0.5)*100);
-    const teorData = horas.map(()=> teor + (Math.random()-0.5)*0.8);
+    const massaData = horas.map(()=> massa);
+    const feData = horas.map(()=> teor);
+    const pcData = horas.map(()=> 0.055);
+    const ppcData = horas.map(()=> 2.1);
     try {
       app._simProjecao = new Chart(ctx, {
-        type:'bar', data:{ labels:horas, datasets:[
-          {label:'Massa (t)',data:massaData,backgroundColor:'rgba(0,102,204,0.7)',borderColor:'#0066CC',borderWidth:2,yAxisID:'y',borderRadius:4},
-          {label:'Teor Fe (%)',data:teorData,type:'line',borderColor:'#00C851',backgroundColor:'rgba(0,200,81,0.1)',borderWidth:3,pointBackgroundColor:'#00C851',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,fill:true,tension:0.4,yAxisID:'y1'},
-          {label:'Meta Fe',data:Array(12).fill(SIM_CFG.metaFeMin),type:'line',borderColor:'#FF4444',borderWidth:2,borderDash:[5,5],pointRadius:0,fill:false,yAxisID:'y1'}
-        ]}, options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-          plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:20,font:{size:12,weight:'bold'}}}},
-          scales:{x:{grid:{display:false}},y:{type:'linear',position:'left',title:{display:true,text:'Massa (t)',font:{weight:'bold'}},grid:{color:'rgba(0,0,0,0.05)'}},
-            y1:{type:'linear',position:'right',title:{display:true,text:'Teor Fe (%)',font:{weight:'bold'}},grid:{drawOnChartArea:false},min:35,max:50}}}
+        data:{ labels:horas, datasets:[
+          {type:'bar', label:'Massa prevista (t)', data:massaData, backgroundColor:'rgba(0,102,204,0.70)', borderColor:'#0066CC', borderWidth:2, yAxisID:'yMass', borderRadius:6, order:3},
+          {type:'line', label:'Fe (%)', data:feData, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.10)', borderWidth:3, pointRadius:3, tension:0.28, yAxisID:'yFe', order:1},
+          {type:'line', label:'Pc (%)', data:pcData, borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,0.10)', borderWidth:3, pointRadius:3, tension:0.28, yAxisID:'yPc', order:1},
+          {type:'line', label:'PPC (%)', data:ppcData, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,0.10)', borderWidth:3, pointRadius:3, tension:0.28, yAxisID:'yPpc', order:1}
+        ]},
+        options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
+          plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:18,font:{size:11,weight:'bold'}}}},
+          scales:{
+            x:{grid:{display:false}},
+            yMass:{type:'linear',position:'left',beginAtZero:true,title:{display:true,text:'Massa (t)',font:{weight:'bold'}},ticks:{font:{size:10}}},
+            yFe:{type:'linear',position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'Fe (%)',font:{weight:'bold'}},ticks:{font:{size:10}}},
+            yPc:{type:'linear',position:'right',offset:true,grid:{drawOnChartArea:false},title:{display:true,text:'Pc (%)',font:{weight:'bold'}},ticks:{font:{size:9}}},
+            yPpc:{type:'linear',position:'left',offset:true,grid:{drawOnChartArea:false},title:{display:true,text:'PPC (%)',font:{weight:'bold'}},ticks:{font:{size:9}}}
+          }}
       });
     } catch(e){ console.error('Chart error:', e); }
   };
