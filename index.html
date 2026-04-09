@@ -66,6 +66,208 @@
         .toast { background: linear-gradient(135deg, #00C851, #00ff66); color: #001a33; font-weight: 700; box-shadow: 0 8px 32px rgba(0, 200, 81, 0.4); }
         .toast.error { background: linear-gradient(135deg, #FF4444, #ff6666); color: white; }
         @media (max-width: 640px) { .glass-panel { margin: 8px; padding: 16px; } .btn-primary { padding: 16px 24px; font-size: 1rem; } }
+    
+    /* ===== ENHANCED SIMULATION STYLES ===== */
+    .kpi-card-enhanced {
+      background: rgba(255,255,255,0.95);
+      border-radius: 16px;
+      padding: 20px;
+      border-left: 5px solid #0066CC;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card-enhanced.success { border-left-color: #00C851; }
+    .kpi-card-enhanced.warning { border-left-color: #FFBB33; }
+    .kpi-card-enhanced.danger { border-left-color: #FF4444; }
+    .kpi-card-enhanced .kpi-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #001a33;
+      line-height: 1;
+    }
+    .kpi-card-enhanced .kpi-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .kpi-progress-container {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+    .kpi-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0066CC, #00D4FF);
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+    .kpi-progress-fill.success { background: linear-gradient(90deg, #00C851, #00ff66); }
+    .kpi-progress-fill.warning { background: linear-gradient(90deg, #FFBB33, #FFD700); }
+    .deviation-alert {
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border-radius: 8px;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+    .deviation-alert.success { background: #dcfce7; color: #166534; }
+    .deviation-alert.warning { background: #fef3c7; color: #92400e; }
+    .deviation-alert.danger { background: #fee2e2; color: #991b1b; }
+    .gauge-container { position: relative; height: 140px; }
+    .gauge-value {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: white;
+      margin-top: -20px;
+    }
+    .gauge-label {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+    }
+    .custom-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #e2e8f0, #0066CC);
+      outline: none;
+    }
+    .custom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0066CC, #00D4FF);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,102,204,0.4);
+    }
+    .slider-container { padding: 8px 0; }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+    .realtime-preview {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border: 2px solid #0066CC;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    .realtime-value {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #0066CC;
+    }
+    .realtime-label {
+      font-size: 0.7rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .smart-alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border-left: 4px solid;
+    }
+    .smart-alert.critical { background: #fee2e2; border-color: #FF4444; }
+    .smart-alert.warning { background: #fef3c7; border-color: #FFBB33; }
+    .smart-alert.info { background: #dbeafe; border-color: #3b82f6; }
+    .smart-alert.success { background: #dcfce7; border-color: #00C851; }
+    .smart-alert-icon { font-size: 1.3rem; }
+    .smart-alert-content h4 { font-weight: 700; font-size: 0.85rem; color: #1e293b; }
+    .smart-alert-content p { font-size: 0.75rem; color: #475569; margin-top: 2px; }
+    .toggle-switch {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+    .toggle-switch input[type="checkbox"] {
+      width: 44px;
+      height: 24px;
+      appearance: none;
+      background: #cbd5e1;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .toggle-switch input[type="checkbox"]:checked { background: #0066CC; }
+    .toggle-switch input[type="checkbox"]::before {
+      content: '';
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-switch input[type="checkbox"]:checked::before { left: 22px; }
+    .toggle-label { font-weight: 600; color: #1e293b; font-size: 0.9rem; }
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .comparison-table th {
+      background: #f1f5f9;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 700;
+      color: #334155;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .comparison-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1e293b;
+    }
+    .comparison-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+    .comparison-badge.positive { background: #dcfce7; color: #166534; }
+    .comparison-badge.negative { background: #fee2e2; color: #991b1b; }
+    .scenario-card {
+      background: rgba(255,255,255,0.95);
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px;
+      transition: all 0.2s;
+    }
+    .scenario-card:hover { border-color: #0066CC; box-shadow: 0 4px 15px rgba(0,102,204,0.15); }
+    .firebase-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #16a34a;
+      background: #dcfce7;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+    .firebase-status.offline { color: #dc2626; background: #fee2e2; }
+
     </style>
 
 <style id="report-mirror-style">
@@ -433,9 +635,151 @@
     }
 </style>
 
+
+    <!-- Firebase SDK v10 (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <style id="auth-styles">
+      #authScreen { position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#001a33 0%,#003d7a 50%,#0066CC 100%);display:flex;align-items:center;justify-content:center;flex-direction:column }
+      #authScreen.hidden { display:none }
+      .auth-card { background:rgba(255,255,255,0.95);border-radius:24px;padding:40px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.4);border:2px solid rgba(0,212,255,0.3) }
+      .auth-card h2 { color:#0066CC;font-size:1.8rem;font-weight:900;text-align:center;margin-bottom:8px }
+      .auth-card p { color:#666;text-align:center;margin-bottom:24px;font-size:0.9rem }
+      .auth-card input { width:100%;padding:14px 16px;border:3px solid #0066CC;border-radius:12px;font-size:1rem;font-weight:600;color:#001a33;margin-bottom:12px;background:#fff }
+      .auth-card input:focus { border-color:#00D4FF;outline:none;box-shadow:0 0 0 4px rgba(0,212,255,0.3) }
+      .auth-card .btn-auth { width:100%;padding:16px;border:none;border-radius:12px;font-size:1.1rem;font-weight:800;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all 0.3s }
+      .auth-card .btn-login { background:linear-gradient(135deg,#0066CC,#00A0E3);color:white;margin-bottom:10px }
+      .auth-card .btn-login:hover { transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,102,204,0.5) }
+      .auth-card .btn-register { background:#fff;border:3px solid #0066CC;color:#0066CC }
+      .auth-card .btn-register:hover { background:#0066CC;color:#fff }
+      .auth-card .auth-error { color:#FF4444;font-size:0.85rem;text-align:center;margin-top:8px;font-weight:700;min-height:20px }
+      .auth-card .auth-toggle { text-align:center;margin-top:16px;font-size:0.85rem;color:#666 }
+      .auth-card .auth-toggle a { color:#0066CC;font-weight:700;cursor:pointer;text-decoration:underline }
+      .auth-user-bar { background:rgba(0,102,204,0.15);border:1px solid rgba(0,212,255,0.3);border-radius:12px;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px }
+      .auth-user-bar .user-email { font-size:0.85rem;font-weight:700;color:#00D4FF }
+      .auth-user-bar .btn-logout { background:#FF4444;color:white;border:none;padding:6px 16px;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer }
+      .sync-indicator { display:inline-flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:700 }
+      .sync-indicator .dot { width:8px;height:8px;border-radius:50% }
+      .sync-indicator .dot.online { background:#00C851;box-shadow:0 0 8px #00C851 }
+      .sync-indicator .dot.offline { background:#FF4444;box-shadow:0 0 8px #FF4444 }
+      .sync-indicator .dot.syncing { background:#FFBB33;animation:pulse-sync 1s infinite }
+      @keyframes pulse-sync { 0%,100%{opacity:1} 50%{opacity:0.4} }
+      .editable-highlight { background:#FFFDE7 !important; border-color:#FFD600 !important; box-shadow:inset 0 0 0 2px rgba(255,214,0,0.3) !important }
+      .editable-marker { position:relative }
+      .editable-marker::after { content:"✏️";position:absolute;top:2px;right:6px;font-size:10px;opacity:0.6 }
+    </style>
+
 </head>
 <body class="antialiased">
 
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-card">
+    <h2>🏗️ NAZA FIELD PRO</h2>
+    <p>Sistema de Controle de Qualidade - Mina</p>
+    <div id="authLoginForm">
+      <input type="email" id="authEmail" placeholder="Email" value="usuario@teste.com">
+      <input type="password" id="authPassword" placeholder="Senha" value="000000">
+      <button class="btn-auth btn-login" onclick="authManager.login()">ENTRAR</button>
+      <div class="auth-toggle">Não tem conta? <a onclick="authManager.showRegister()">Criar conta</a></div>
+      <div id="authError" class="auth-error"></div>
+    </div>
+    <div id="authRegisterForm" style="display:none">
+      <input type="email" id="authRegEmail" placeholder="Email">
+      <input type="password" id="authRegPassword" placeholder="Senha (mínimo 6 caracteres)">
+      <input type="password" id="authRegPassword2" placeholder="Confirmar senha">
+      <button class="btn-auth btn-login" onclick="authManager.register()">CRIAR CONTA</button>
+      <button class="btn-auth btn-register" onclick="authManager.showLogin()">VOLTAR PARA LOGIN</button>
+      <div id="authRegError" class="auth-error"></div>
+    </div>
+  </div>
+</div>
+
+<script id="firebase-init">
+(function(){
+  // Firebase config - chave API é publica/publishable (segura no frontend)
+  const fbConfig = {
+    apiKey: "AIzaSyAltk4f6Nbhxa7hJaGkSCdpb2V0khtWPo8",
+    authDomain: "relatoriotecnicoqualidade.firebaseapp.com",
+    projectId: "relatoriotecnicoqualidade",
+    storageBucket: "relatoriotecnicoqualidade.firebasestorage.app",
+    messagingSenderId: "637536451909",
+    appId: "1:637536451909:web:c0719efa6035d00703d22c"
+  };
+  
+  firebase.initializeApp(fbConfig);
+  window.db = firebase.firestore();
+  window.auth = firebase.auth();
+  
+  // Enable offline persistence
+  db.enablePersistence({synchronizeTabs:true}).catch(err => {
+    console.warn('Firestore persistence:', err.code);
+  });
+
+  window.authManager = {
+    showRegister() {
+      document.getElementById('authLoginForm').style.display='none';
+      document.getElementById('authRegisterForm').style.display='block';
+    },
+    showLogin() {
+      document.getElementById('authLoginForm').style.display='block';
+      document.getElementById('authRegisterForm').style.display='none';
+    },
+    async login() {
+      const email = document.getElementById('authEmail').value.trim();
+      const pass = document.getElementById('authPassword').value;
+      document.getElementById('authError').textContent = '';
+      if (!email||!pass) { document.getElementById('authError').textContent='Preencha email e senha'; return; }
+      try {
+        await auth.signInWithEmailAndPassword(email, pass);
+      } catch(e) {
+        if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+          // Auto-create default user
+          try { await auth.createUserWithEmailAndPassword(email, pass); } 
+          catch(e2) { document.getElementById('authError').textContent = e2.message; }
+        } else {
+          document.getElementById('authError').textContent = e.message;
+        }
+      }
+    },
+    async register() {
+      const email = document.getElementById('authRegEmail').value.trim();
+      const pass = document.getElementById('authRegPassword').value;
+      const pass2 = document.getElementById('authRegPassword2').value;
+      document.getElementById('authRegError').textContent = '';
+      if (!email||!pass) { document.getElementById('authRegError').textContent='Preencha todos os campos'; return; }
+      if (pass !== pass2) { document.getElementById('authRegError').textContent='Senhas não conferem'; return; }
+      if (pass.length < 6) { document.getElementById('authRegError').textContent='Senha deve ter pelo menos 6 caracteres'; return; }
+      try { await auth.createUserWithEmailAndPassword(email, pass); } 
+      catch(e) { document.getElementById('authRegError').textContent = e.message; }
+    },
+    logout() {
+      auth.signOut();
+    }
+  };
+
+  // Auth state listener
+  auth.onAuthStateChanged(user => {
+    const screen = document.getElementById('authScreen');
+    const userBar = document.getElementById('authUserBar');
+    if (user) {
+      screen.classList.add('hidden');
+      if (userBar) {
+        userBar.style.display = 'flex';
+        document.getElementById('authUserEmail').textContent = user.email;
+      }
+      // Start cloud sync
+      if (window.cloudSync) cloudSync.startSync(user.uid);
+    } else {
+      screen.classList.remove('hidden');
+      if (userBar) userBar.style.display = 'none';
+    }
+  });
+})();
+</script>
 <div id="app" class="min-h-screen pb-24">
 
     <!-- HEADER -->
@@ -493,7 +837,19 @@
             <div id="importPreview" class="hidden mt-6 p-4 bg-naza-success/10 border-2 border-naza-success rounded-xl"><div class="flex items-center gap-3"><svg class="w-8 h-8 text-naza-success" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg><div><p class="font-bold text-naza-success text-lg">IMPORTAÇÃO CONCLUÍDA!</p><p class="text-sm text-gray-600" id="importStats">0 frentes detectadas</p></div></div></div>
         </section>
 
-        <!-- TABS -->
+        
+<div id="authUserBar" class="auth-user-bar" style="display:none;margin:8px 16px">
+  <div>
+    <span class="user-email" id="authUserEmail"></span>
+    <span class="sync-indicator" id="syncIndicator"><span class="dot offline" id="syncDot"></span><span id="syncLabel">Offline</span></span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button onclick="cloudSync.forcePush()" class="btn-primary" style="padding:6px 12px;font-size:0.75rem;border-radius:8px">SINCRONIZAR</button>
+    <button onclick="cloudSync.clearCloud()" style="background:#FF8800;color:white;border:none;padding:6px 12px;border-radius:8px;font-weight:700;font-size:0.75rem;cursor:pointer">LIMPAR NUVEM</button>
+    <button onclick="authManager.logout()" class="btn-logout" style="background:#FF4444;color:white;border:none;padding:6px 12px;border-radius:8px;font-weight:700;font-size:0.75rem;cursor:pointer">SAIR</button>
+  </div>
+</div>
+<!-- TABS -->
         <div class="glass-panel rounded-2xl p-2 flex gap-2 overflow-x-auto">
             <button onclick="app.switchTab('frentes')" class="tab-btn flex-1 py-4 px-4 rounded-xl font-bold text-sm bg-naza-primary text-white shadow-lg active" data-tab="frentes">FRENTES</button>
             <button onclick="app.switchTab('reconciliacao')" class="tab-btn flex-1 py-4 px-4 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100" data-tab="reconciliacao">RECONCILIAÇÃO</button>
@@ -556,14 +912,14 @@
         <!-- TAB: RETOMADAS -->
         <section id="tab-retomadas" class="tab-content hidden space-y-6">
             <div class="glass-panel rounded-3xl p-6">
-                <h3 class="text-2xl font-black text-primary mb-6 flex items-center gap-3"><svg class="w-8 h-8 text-naza-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>RETOMADA PILHAS - BR02</h3>
+                <h3 class="text-2xl font-black text-primary mb-6 flex items-center gap-3"><svg class="w-8 h-8 text-naza-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>RETOMADA DE PILHAS</h3>
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
                     <div class="bg-blue-50 rounded-xl p-4 border-2 border-blue-200"><label class="text-xs font-bold text-blue-600 uppercase">Pilha Origem</label><input type="text" id="br02_origem" class="input-field w-full mt-2 rounded-lg px-4 py-3" placeholder="Ex: PILHA-01" onchange="app.atualizarRetomada()"></div>
                     <div class="bg-green-50 rounded-xl p-4 border-2 border-green-200"><label class="text-xs font-bold text-green-600 uppercase">Quantidade Retomada (t)</label><input type="number" step="0.01" id="br02_quantidade" class="input-field w-full mt-2 rounded-lg px-4 py-3" placeholder="0,00" oninput="app.atualizarRetomada()"></div>
                     <div class="bg-purple-50 rounded-xl p-4 border-2 border-purple-200"><label class="text-xs font-bold text-purple-600 uppercase">Teor Fe Médio (%)</label><input type="number" step="0.001" id="br02_fe" class="input-field w-full mt-2 rounded-lg px-4 py-3" placeholder="0,000" oninput="app.atualizarRetomada()"></div>
                     <div class="bg-orange-50 rounded-xl p-4 border-2 border-orange-200"><label class="text-xs font-bold text-orange-600 uppercase">Status</label><select id="br02_status" class="input-field w-full mt-2 rounded-lg px-4 py-3" onchange="app.atualizarRetomada()"><option value="programada">Programada</option><option value="em_andamento">Em Andamento</option><option value="concluida">Concluída</option><option value="suspensa">Suspensa</option></select></div>
                 </div>
-                <div class="bg-gradient-to-r from-naza-primary/20 to-naza-secondary/20 rounded-xl p-4 mb-6 border-2 border-naza-accent"><h4 class="font-bold text-white mb-2">RESUMO DA RETOMADA</h4><div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center"><div><p class="text-xs text-white/70">Total Programado</p><p class="text-2xl font-black text-naza-accent" id="br02_total_prog">0 t</p></div><div><p class="text-xs text-white/70">Total Realizado</p><p class="text-2xl font-black text-naza-success" id="br02_total_real">0 t</p></div><div><p class="text-xs text-white/70">Teor Fe Médio</p><p class="text-2xl font-black text-naza-warning" id="br02_te_medio">0,000%</p></div><div><p class="text-xs text-white/70">Eficiência</p><p class="text-2xl font-black text-white" id="br02_eficiencia">0%</p></div></div></div>
+                <div class="bg-gradient-to-r from-naza-primary/20 to-naza-secondary/20 rounded-xl p-4 mb-6 border-2 border-naza-accent"><h4 class="font-bold text-white mb-2">RESUMO DAS RETOMADAS (TODAS AS PILHAS)</h4><div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center"><div><p class="text-xs text-white/70">Total Programado</p><p class="text-2xl font-black text-naza-accent" id="br02_total_prog">0 t</p></div><div><p class="text-xs text-white/70">Total Realizado</p><p class="text-2xl font-black text-naza-success" id="br02_total_real">0 t</p></div><div><p class="text-xs text-white/70">Teor Fe Médio</p><p class="text-2xl font-black text-naza-warning" id="br02_te_medio">0,000%</p></div><div><p class="text-xs text-white/70">Eficiência</p><p class="text-2xl font-black text-white" id="br02_eficiencia">0%</p></div></div></div>
                 <div class="chart-box"><canvas id="chartBR02" height="250"></canvas></div>
                 <div class="mt-6"><h4 class="font-bold text-primary mb-3">HISTÓRICO DE RETOMADAS</h4><div id="retomadasList" class="space-y-2"><p class="text-center text-gray-500 py-4">Nenhuma retomada registrada hoje</p></div></div>
                 <button onclick="app.adicionarRetomada()" class="btn-success w-full mt-4 py-3 rounded-xl font-bold">+ ADICIONAR NOVA RETOMADA</button>
@@ -962,12 +1318,22 @@ class NazaFieldPro {
     updateRetomadasList() {
         const container = document.getElementById('retomadasList');
         if (this.data.retomadas.length === 0) { container.innerHTML = '<p class="text-center text-gray-500 py-4">Nenhuma retomada registrada hoje</p>'; return; }
-        container.innerHTML = this.data.retomadas.map((r, i) => `<div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200"><div><span class="font-bold text-primary">${r.origem}</span><span class="text-sm text-gray-600 ml-2">${r.quantidade.toFixed(2)}t</span>${r.fe > 0 ? `<span class="text-sm text-naza-accent ml-2">Fe: ${r.fe.toFixed(3)}%</span>` : ''}</div><div class="flex items-center gap-2"><span class="px-2 py-1 rounded text-xs font-bold ${r.status === 'concluida' ? 'bg-green-100 text-green-700' : r.status === 'em_andamento' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}">${r.status.replace('_', ' ').toUpperCase()}</span><button onclick="app.removerRetomada(${i})" class="text-red-500 hover:text-red-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></div>`).join('');
+        const sections = {};
+        this.data.retomadas.forEach((r,i) => {
+          const key = r.sectionKey || r.sheetName || 'Retomadas';
+          if (!sections[key]) sections[key] = {title: r.sectionTitle || key, items: []};
+          sections[key].items.push({r, i});
+        });
+        container.innerHTML = Object.values(sections).map(sec => {
+          const header = Object.keys(sections).length > 1 ? `<div class="font-bold text-primary text-sm py-2 px-1 border-b border-blue-200 mb-2">${sec.title}</div>` : '';
+          const rows = sec.items.map(({r, i}) => `<div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200" data-status="${r.status}"><div><span class="font-bold text-primary">${r.origem}</span><span class="text-sm text-gray-600 ml-2">${(r.quantidade||0).toFixed(0)}t</span>${r.realizado_t ? `<span class="text-sm text-green-600 ml-2">Real: ${(r.realizado_t||0).toFixed(0)}t</span>` : ''}${r.fe > 0 ? `<span class="text-sm text-naza-accent ml-2">Fe: ${r.fe.toFixed(3)}%</span>` : ''}${r.planejadoPct ? `<span class="text-sm text-purple-600 ml-2">${r.planejadoPct}%</span>` : ''}</div><div class="flex items-center gap-2"><span class="px-2 py-1 rounded text-xs font-bold ${r.status === 'concluida' ? 'bg-green-100 text-green-700' : r.status === 'em_andamento' ? 'bg-blue-100 text-blue-700' : r.status === 'suspensa' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}">${(r.status||'').replace('_', ' ').toUpperCase()}</span><button onclick="app.removerRetomada(${i})" class="text-red-500 hover:text-red-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div></div>`).join('');
+          return header + rows;
+        }).join('');
         this.atualizarResumoRetomadas();
     }
 
     removerRetomada(i) { this.data.retomadas.splice(i, 1); this.saveData(); this.updateRetomadasList(); this.updateChartBR02(); }
-    atualizarResumoRetomadas() { const total = this.data.retomadas.reduce((sum, r) => sum + r.quantidade, 0); const concluidas = this.data.retomadas.filter(r => r.status === 'concluida'); const totalConcluido = concluidas.reduce((sum, r) => sum + r.quantidade, 0); const mediaFe = concluidas.length > 0 ? concluidas.reduce((sum, r) => sum + r.fe, 0) / concluidas.length : 0; const eficiencia = total > 0 ? (totalConcluido / total * 100) : 0; document.getElementById('br02_total_prog').textContent = total.toFixed(2) + ' t'; document.getElementById('br02_total_real').textContent = totalConcluido.toFixed(2) + ' t'; document.getElementById('br02_te_medio').textContent = mediaFe.toFixed(3) + '%'; document.getElementById('br02_eficiencia').textContent = eficiencia.toFixed(1) + '%'; }
+    atualizarResumoRetomadas() { const total = this.data.retomadas.reduce((sum, r) => sum + (r.quantidade || 0), 0); const totalReal = this.data.retomadas.reduce((sum, r) => sum + (r.realizado_t || 0), 0); const concluidas = this.data.retomadas.filter(r => r.status === 'concluida'); const totalConcluido = concluidas.length > 0 ? concluidas.reduce((sum, r) => sum + (r.realizado_t || r.quantidade || 0), 0) : 0; const mediaFe = concluidas.length > 0 ? concluidas.reduce((sum, r) => sum + (r.fe || 0), 0) / concluidas.length : 0; const eficiencia = total > 0 ? (totalReal / total * 100) : 0; document.getElementById('br02_total_prog').textContent = total.toFixed(0) + ' t'; document.getElementById('br02_total_real').textContent = totalReal.toFixed(0) + ' t'; document.getElementById('br02_te_medio').textContent = mediaFe.toFixed(3) + '%'; document.getElementById('br02_eficiencia').textContent = eficiencia.toFixed(1) + '%'; }
     atualizarRetomada() { this.saveData(); this.atualizarResumoRetomadas(); }
 
     initCharts() {
@@ -1962,44 +2328,175 @@ const app = new NazaFieldPro();
       simulacao.className = 'tab-content hidden space-y-6';
       simulacao.innerHTML = `
         <div class="glass-panel rounded-3xl p-6">
-          <div class="flex items-center justify-between flex-wrap gap-3 mb-5">
+          <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
             <div>
-              <h3 class="text-2xl font-black text-primary">SIMULAÇÃO DE LAVRA E BLENDAGEM</h3>
-              <p class="kpi-note mt-2">Previsão de massa e teor com foco operacional por hora, por turno e por dia.</p>
+              <h3 class="text-2xl font-black text-primary flex items-center gap-3">
+                <svg class="w-8 h-8" style="color:#0066CC" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                SIMULAÇÃO DE LAVRA E BLENDAGEM
+              </h3>
+              <p class="text-sm text-gray-600 mt-2">Previsão operacional com análise de cenários e alertas inteligentes</p>
             </div>
-            <div class="field-inline-badge"><span>Projeção dinâmica</span></div>
+            <div class="firebase-status" id="firebaseSyncStatus">
+              <span class="w-2 h-2 rounded-full bg-green-500"></span>
+              <span>Sincronizado</span>
+            </div>
           </div>
-          <div class="kpi-layout">
-            <div class="space-y-4">
-              <div class="kpi-form-grid">
-                <div><label class="block text-sm font-bold text-primary mb-2">MASSA ALIMENTADA / h (t)</label><input id="sim_massaHora" type="number" step="0.01" class="input-field w-full rounded-xl px-4 py-3"></div>
-                <div><label class="block text-sm font-bold text-primary mb-2">TEOR MÉDIO / h (%)</label><input id="sim_teorHora" type="number" step="0.01" class="input-field w-full rounded-xl px-4 py-3"></div>
-                <div><label class="block text-sm font-bold text-primary mb-2">HORAS DO TURNO</label><input id="sim_horasTurno" type="number" step="0.1" class="input-field w-full rounded-xl px-4 py-3"></div>
-                <div><label class="block text-sm font-bold text-primary mb-2">RECUPERAÇÃO OPERACIONAL (%)</label><input id="sim_recuperacao" type="number" step="0.1" class="input-field w-full rounded-xl px-4 py-3"></div>
-                <div><label class="block text-sm font-bold text-primary mb-2">USINA-ALVO</label><select id="sim_usinaAlvo" class="input-field w-full rounded-xl px-4 py-3"><option>Usina 2</option><option>Usina 3</option><option>Usina 2 + 3</option></select></div>
-                <div><label class="block text-sm font-bold text-primary mb-2">ATIVAÇÃO FUTURA 3ª USINA (%)</label><input id="sim_terceiraUsina" type="number" step="0.1" class="input-field w-full rounded-xl px-4 py-3"></div>
+
+          <!-- KPI CARDS -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="kpi-card-enhanced primary" id="kpiMassaTurno">
+              <div class="kpi-value" id="kpiMassaTurnoValue">0 t</div>
+              <div class="kpi-label">Massa por Turno</div>
+              <div class="kpi-progress-container"><div class="kpi-progress-fill" id="kpiMassaTurnoBar" style="width:0%"></div></div>
+              <div class="deviation-alert" id="kpiMassaTurnoAlert">Aguardando dados</div>
+            </div>
+            <div class="kpi-card-enhanced success" id="kpiTeorMedio">
+              <div class="kpi-value" id="kpiTeorMedioValue">0%</div>
+              <div class="kpi-label">Teor Fe Médio</div>
+              <div class="kpi-progress-container"><div class="kpi-progress-fill success" id="kpiTeorMedioBar" style="width:0%"></div></div>
+              <div class="deviation-alert" id="kpiTeorMedioAlert">Aguardando dados</div>
+            </div>
+            <div class="kpi-card-enhanced warning" id="kpiRecuperacao">
+              <div class="kpi-value" id="kpiRecuperacaoValue">0%</div>
+              <div class="kpi-label">Recuperação Operacional</div>
+              <div class="kpi-progress-container"><div class="kpi-progress-fill warning" id="kpiRecuperacaoBar" style="width:0%"></div></div>
+              <div class="deviation-alert" id="kpiRecuperacaoAlert">Aguardando dados</div>
+            </div>
+            <div class="kpi-card-enhanced primary" id="kpiMetal">
+              <div class="kpi-value" id="kpiMetalValue">0 t</div>
+              <div class="kpi-label">Metal Contido / Turno</div>
+              <div class="kpi-progress-container"><div class="kpi-progress-fill" id="kpiMetalBar" style="width:0%"></div></div>
+              <div class="deviation-alert" id="kpiMetalAlert">Aguardando dados</div>
+            </div>
+          </div>
+
+          <!-- GAUGES -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="glass-card rounded-2xl p-6 text-center">
+              <h4 class="text-lg font-bold text-white mb-4">Eficiência do Blend</h4>
+              <div class="gauge-container"><canvas id="gaugeEficiencia"></canvas></div>
+              <div class="gauge-value" id="gaugeEficienciaValue">0%</div>
+              <div class="gauge-label">Índice de Aderência</div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 text-center">
+              <h4 class="text-lg font-bold text-white mb-4">Qualidade do Minério</h4>
+              <div class="gauge-container"><canvas id="gaugeQualidade"></canvas></div>
+              <div class="gauge-value" id="gaugeQualidadeValue">0%</div>
+              <div class="gauge-label">Teor Fe Médio</div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 text-center">
+              <h4 class="text-lg font-bold text-white mb-4">Capacidade Utilizada</h4>
+              <div class="gauge-container"><canvas id="gaugeCapacidade"></canvas></div>
+              <div class="gauge-value" id="gaugeCapacidadeValue">0%</div>
+              <div class="gauge-label">Taxa de Ocupação</div>
+            </div>
+          </div>
+
+          <!-- CONTROLES COM SLIDERS -->
+          <div class="bg-white/50 rounded-2xl p-6 mb-8">
+            <h4 class="text-lg font-bold text-primary mb-6 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+              Parâmetros de Simulação
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div class="slider-container">
+                <div class="slider-label"><span>Massa Alimentada / h</span><span id="sliderMassaValue">1.800 t</span></div>
+                <input type="range" id="sliderMassa" min="500" max="3000" value="1800" class="custom-slider" oninput="app.updateSimulacaoEnhanced()">
+                <div class="flex justify-between text-xs text-gray-500 mt-1"><span>500 t</span><span>3.000 t</span></div>
               </div>
-              <div class="flex gap-2 flex-wrap">
-                <button onclick="app.runSimulation()" class="btn-success px-5 py-3 rounded-xl font-bold">ATUALIZAR SIMULAÇÃO</button>
-                <button onclick="app.preencherSimulacaoPelosDados()" class="btn-primary px-5 py-3 rounded-xl font-bold">USAR DADOS DO DIA</button>
+              <div class="slider-container">
+                <div class="slider-label"><span>Teor Fe Médio</span><span id="sliderTeorValue">41.3%</span></div>
+                <input type="range" id="sliderTeor" min="35" max="50" step="0.1" value="41.3" class="custom-slider" oninput="app.updateSimulacaoEnhanced()">
+                <div class="flex justify-between text-xs text-gray-500 mt-1"><span>35%</span><span>50%</span></div>
               </div>
-              <div id="simulacaoResumo" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+              <div class="slider-container">
+                <div class="slider-label"><span>Horas do Turno</span><span id="sliderHorasValue">12 h</span></div>
+                <input type="range" id="sliderHoras" min="6" max="24" value="12" class="custom-slider" oninput="app.updateSimulacaoEnhanced()">
+                <div class="flex justify-between text-xs text-gray-500 mt-1"><span>6h</span><span>24h</span></div>
+              </div>
+              <div class="slider-container">
+                <div class="slider-label"><span>Recuperação Operacional</span><span id="sliderRecuperacaoValue">96%</span></div>
+                <input type="range" id="sliderRecuperacao" min="80" max="100" step="0.5" value="96" class="custom-slider" oninput="app.updateSimulacaoEnhanced()">
+                <div class="flex justify-between text-xs text-gray-500 mt-1"><span>80%</span><span>100%</span></div>
+              </div>
+              <div class="slider-container">
+                <div class="slider-label"><span>Ativação 3ª Usina</span><span id="sliderTerceiraValue">0%</span></div>
+                <input type="range" id="sliderTerceira" min="0" max="50" step="5" value="0" class="custom-slider" oninput="app.updateSimulacaoEnhanced()">
+                <div class="flex justify-between text-xs text-gray-500 mt-1"><span>0%</span><span>50%</span></div>
+              </div>
+              <div class="flex items-center justify-center">
+                <div class="toggle-switch">
+                  <input type="checkbox" id="toggleUsina" onchange="app.updateSimulacaoEnhanced()">
+                  <span class="toggle-label" id="toggleUsinaLabel">Usina 2</span>
+                </div>
+              </div>
             </div>
-            <div class="chart-box compact">
-              <canvas id="simForecastChart" height="200"></canvas>
+            <!-- Preview em Tempo Real -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+              <div class="realtime-preview"><div class="realtime-value" id="previewTurno">0</div><div class="realtime-label">t/turno</div></div>
+              <div class="realtime-preview"><div class="realtime-value" id="previewDia">0</div><div class="realtime-label">t/dia</div></div>
+              <div class="realtime-preview"><div class="realtime-value" id="previewMetalTurno">0</div><div class="realtime-label">t Fe/turno</div></div>
+              <div class="realtime-preview"><div class="realtime-value" id="previewBlend">0%</div><div class="realtime-label">Blend previsto</div></div>
             </div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            <div class="kpi-card">
-              <h4>Leitura operacional</h4>
-              <div id="simNarrativa" class="kpi-note mt-3">Aguardando atualização dos parâmetros.</div>
+
+          <!-- ALERTAS INTELIGENTES -->
+          <div id="smartAlertsContainer" class="mb-8"></div>
+
+          <!-- GRÁFICO DE PROJEÇÃO -->
+          <div class="glass-panel rounded-2xl p-6 mb-8" style="background:rgba(255,255,255,0.95)">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="text-lg font-bold text-primary">Projeção Horária de Massa e Qualidade</h4>
+              <div class="flex gap-2">
+                <span class="flex items-center gap-1 text-xs text-gray-600"><span class="w-3 h-3 rounded-full bg-green-500"></span> Meta Fe</span>
+                <span class="flex items-center gap-1 text-xs text-gray-600"><span class="w-3 h-3 rounded-full bg-red-500"></span> Crítico</span>
+              </div>
             </div>
-            <div class="kpi-card">
-              <h4>Uso recomendado</h4>
-              <div class="kpi-note mt-3">Ajuste massa e teor na troca de frente, na virada de turno ou quando houver mudança de disponibilidade, para antecipar impacto no blend.</div>
-            </div>
+            <div style="height:350px"><canvas id="chartProjecaoHoraria"></canvas></div>
           </div>
+
+          <!-- COMPARATIVO DE CENÁRIOS -->
+          <div class="glass-panel rounded-2xl p-6 mb-8" style="background:rgba(255,255,255,0.95)">
+            <div class="flex items-center justify-between mb-6">
+              <h4 class="text-lg font-bold text-primary">Comparativo de Cenários</h4>
+              <div class="flex gap-2">
+                <button onclick="app.salvarCenario()" class="btn-primary px-4 py-2 rounded-lg text-sm">💾 Salvar Cenário</button>
+                <button onclick="app.exportarCenariosPDF()" class="btn-success px-4 py-2 rounded-lg text-sm">📄 Exportar PDF</button>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="comparison-table">
+                <thead><tr><th>Cenário</th><th>Massa/h</th><th>Teor Fe</th><th>Massa/turno</th><th>Metal/turno</th><th>Blend</th><th>vs Atual</th></tr></thead>
+                <tbody id="comparisonTableBody"></tbody>
+              </table>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6" id="cenariosSalvos"></div>
+          </div>
+
+          <!-- DADOS ORIGINAIS (inputs ocultos para compatibilidade) -->
+          <input type="hidden" id="sim_massaHora"><input type="hidden" id="sim_teorHora"><input type="hidden" id="sim_horasTurno">
+          <input type="hidden" id="sim_recuperacao"><input type="hidden" id="sim_terceiraUsina">
+          <select id="sim_usinaAlvo" style="display:none"><option>Usina 2</option><option>Usina 3</option><option>Usina 2 + 3</option></select>
+          <div id="simulacaoResumo" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"></div>
+
+          <!-- AÇÕES -->
+          <div class="flex flex-wrap gap-4 mt-6">
+            <button onclick="app.aplicarSimulacaoEnhanced()" class="btn-success flex-1 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              APLICAR SIMULAÇÃO
+            </button>
+            <button onclick="app.resetarSimulacaoEnhanced()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-4 rounded-xl font-bold flex items-center gap-2">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              RESETAR
+            </button>
+            <button onclick="app.preencherSimulacaoPelosDados()" class="btn-primary px-6 py-4 rounded-xl font-bold flex items-center gap-2">
+              📊 USAR DADOS DO DIA
+            </button>
+          </div>
+
+          <!-- Panels for inline editing (frentes, recon, retomadas) will be injected by existing JS -->
         </div>`;
+      
       main.insertBefore(simulacao, relatorio);
     }
 
@@ -3265,20 +3762,7 @@ const app = new NazaFieldPro();
   const fmt = (v, dec=0) => Number(v || 0).toLocaleString('pt-BR', {minimumFractionDigits:dec, maximumFractionDigits:dec});
   const deepClone = (x) => JSON.parse(JSON.stringify(x));
 
-  try {
-    const originalSetItem = localStorage.setItem.bind(localStorage);
-    localStorage.setItem = function(key, value){
-      if (key === 'naza_data_v3') {
-        try { localStorage.removeItem('naza_data_v3'); } catch(e) {}
-        return;
-      }
-      try { return originalSetItem(key, value); } catch(err) {
-        if (String(err).includes('quota')) return;
-        throw err;
-      }
-    };
-    try { localStorage.removeItem('naza_data_v3'); } catch(e) {}
-  } catch(e) {}
+// localStorage override removed - using IndexedDB instead
 
   app.hasMeaningfulSheetContent = function(){
     const clones = this.data.sheetClones || {};
@@ -3661,6 +4145,29 @@ const app = new NazaFieldPro();
 .report-page .routing-report-wrap .sheet-route-table{font-size:11px}
 .report-page .routing-report-wrap .sheet-route-table th,
 .report-page .routing-report-wrap .sheet-route-table td{padding:8px 6px}
+
+.simulation-summary-stack {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:18px;
+}
+.simulation-summary-stack .report-metric-mini {
+  overflow:visible;
+}
+.simulation-summary-stack .report-metric-mini table {
+  width:100%;
+  border-collapse:collapse;
+}
+.simulation-summary-stack .report-metric-mini table th,
+.simulation-summary-stack .report-metric-mini table td {
+  padding:8px 12px;
+  font-size:12px;
+  border-bottom:1px solid #e2e8f0;
+}
+.simulation-summary-stack .routing-report-wrap {
+  page-break-inside:avoid;
+  overflow:visible;
+}
 </style>
 <script id="v5-report-simulation-script">
 (function(){
@@ -3984,6 +4491,1323 @@ const app = new NazaFieldPro();
     try { app.ensureSimulationScreen(); } catch(e){}
     try { app.ensureReconCharts(); app.updateCharts(); } catch(e){}
   }, 120);
+})();
+</script>
+
+
+<script id="indexeddb-engine">
+(function(){
+  const DB_NAME = 'NazaFieldProDB';
+  const DB_VERSION = 2;
+  const STORE_NAME = 'appData';
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = (e) => {
+        const idb = e.target.result;
+        if (!idb.objectStoreNames.contains(STORE_NAME)) idb.createObjectStore(STORE_NAME);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function idbGet(key) {
+    const idb = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = idb.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function idbSet(key, value) {
+    const idb = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = idb.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).put(value, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function idbDelete(key) {
+    const idb = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = idb.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  window.idbStore = { get: idbGet, set: idbSet, delete: idbDelete, openDB };
+})();
+</script>
+
+<script id="cloud-sync-engine">
+(function(){
+  let userId = null;
+  let syncTimer = null;
+  let lastSyncTime = 0;
+  const SYNC_INTERVAL = 30000; // 30s
+  const DEBOUNCE = 3000;
+  let pendingSync = false;
+
+  function updateSyncUI(status) {
+    const dot = document.getElementById('syncDot');
+    const label = document.getElementById('syncLabel');
+    if (!dot || !label) return;
+    dot.className = 'dot ' + status;
+    const labels = { online: 'Online', offline: 'Offline', syncing: 'Sincronizando...' };
+    label.textContent = labels[status] || status;
+  }
+
+  window.cloudSync = {
+    startSync(uid) {
+      userId = uid;
+      updateSyncUI(navigator.onLine ? 'online' : 'offline');
+      
+      // Pull from cloud first
+      this.pullFromCloud();
+      
+      // Auto sync interval
+      clearInterval(syncTimer);
+      syncTimer = setInterval(() => {
+        if (navigator.onLine && userId) this.pushToCloud();
+      }, SYNC_INTERVAL);
+
+      // Sync on connectivity change
+      window.addEventListener('online', () => {
+        updateSyncUI('online');
+        setTimeout(() => this.pushToCloud(), 2000);
+      });
+      window.addEventListener('offline', () => updateSyncUI('offline'));
+    },
+
+    async pushToCloud() {
+      if (!userId || !navigator.onLine) return;
+      try {
+        updateSyncUI('syncing');
+        const data = await idbStore.get('naza_app_data');
+        if (!data) { updateSyncUI('online'); return; }
+        
+        // Remove photos from cloud sync (too large)
+        const cloudData = JSON.parse(JSON.stringify(data));
+        if (cloudData.frentes) {
+          cloudData.frentes.forEach(f => {
+            if (f.fotos && f.fotos.length > 0) {
+              f.fotosCount = f.fotos.length;
+              f.fotos = []; // Don't send photos to cloud
+            }
+          });
+        }
+        cloudData.lastSync = Date.now();
+        cloudData.deviceId = this.getDeviceId();
+        
+        await db.collection('users').doc(userId).collection('reports').doc('current').set(cloudData, { merge: true });
+        lastSyncTime = Date.now();
+        updateSyncUI('online');
+        console.log('☁️ Dados sincronizados com a nuvem');
+      } catch(err) {
+        console.error('Sync push error:', err);
+        updateSyncUI(navigator.onLine ? 'online' : 'offline');
+      }
+    },
+
+    async pullFromCloud() {
+      if (!userId || !navigator.onLine) return;
+      try {
+        updateSyncUI('syncing');
+        const doc = await db.collection('users').doc(userId).collection('reports').doc('current').get();
+        if (doc.exists) {
+          const cloudData = doc.data();
+          const localData = await idbStore.get('naza_app_data');
+          
+          // Merge: cloud wins for newer data, keep local photos
+          if (!localData || (cloudData.lastSync && (!localData.lastSync || cloudData.lastSync > localData.lastSync))) {
+            // Restore local photos
+            if (localData && localData.frentes) {
+              cloudData.frentes = (cloudData.frentes || []).map(cf => {
+                const local = localData.frentes.find(lf => lf.codigo === cf.codigo && lf.destino === cf.destino);
+                if (local && local.fotos && local.fotos.length > 0) cf.fotos = local.fotos;
+                return cf;
+              });
+            }
+            await idbStore.set('naza_app_data', cloudData);
+            if (window.app) {
+              app.data = { ...app.data, ...cloudData };
+              app.updateUI();
+            }
+            console.log('☁️ Dados da nuvem carregados');
+          }
+        }
+        updateSyncUI('online');
+      } catch(err) {
+        console.error('Sync pull error:', err);
+        updateSyncUI(navigator.onLine ? 'online' : 'offline');
+      }
+    },
+
+    async forcePush() {
+      if (!navigator.onLine) {
+        if (window.app) app.showToast('Sem conexão. Dados serão sincronizados quando houver sinal.', 'error');
+        return;
+      }
+      await this.pushToCloud();
+      if (window.app) app.showToast('Dados sincronizados com a nuvem!');
+    },
+
+    async clearCloud() {
+      if (!userId) return;
+      if (!confirm('Limpar todos os dados da nuvem? Dados locais serão mantidos.')) return;
+      try {
+        await db.collection('users').doc(userId).collection('reports').doc('current').delete();
+        if (window.app) app.showToast('Dados da nuvem limpos!');
+      } catch(err) {
+        if (window.app) app.showToast('Erro: ' + err.message, 'error');
+      }
+    },
+
+    getDeviceId() {
+      let id = localStorage.getItem('naza_device_id');
+      if (!id) { id = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2,6); localStorage.setItem('naza_device_id', id); }
+      return id;
+    }
+  };
+})();
+</script>
+
+<script id="override-save-load">
+(function(){
+  if (!window.app) { setTimeout(arguments.callee, 100); return; }
+
+  // Override saveData to use IndexedDB + trigger cloud sync
+  const originalSave = app.saveData.bind(app);
+  app.saveData = function() {
+    const dataClone = JSON.parse(JSON.stringify(this.data));
+    dataClone.lastModified = Date.now();
+    idbStore.set('naza_app_data', dataClone).catch(err => console.error('IDB save error:', err));
+    
+    // Debounced cloud sync
+    clearTimeout(this._cloudSyncTimer);
+    this._cloudSyncTimer = setTimeout(() => {
+      if (navigator.onLine && window.cloudSync && auth.currentUser) {
+        cloudSync.pushToCloud();
+      }
+    }, 5000);
+  };
+
+  // Override loadData to use IndexedDB
+  const originalLoad = app.loadData.bind(app);
+  app.loadData = function() {
+    // First try localStorage for migration
+    const lsData = localStorage.getItem('naza_data_v3');
+    if (lsData) {
+      try {
+        const parsed = JSON.parse(lsData);
+        this.data = { ...this.data, ...parsed };
+        // Migrate to IndexedDB
+        idbStore.set('naza_app_data', this.data);
+        localStorage.removeItem('naza_data_v3');
+        console.log('Migrado de localStorage para IndexedDB');
+      } catch(e) {}
+    }
+  };
+
+  // Async load from IDB on startup
+  idbStore.get('naza_app_data').then(data => {
+    if (data) {
+      app.data = { ...app.data, ...data };
+      app.updateUI();
+      console.log('Dados carregados do IndexedDB');
+    }
+  }).catch(err => console.error('IDB load error:', err));
+
+  // ========== FIX: Destination bug ==========
+  // When editing a front, if destination changes, update in-place instead of creating duplicate
+  const originalSaveFrente = app.saveFrente.bind(app);
+  app.saveFrente = function() {
+    const codigo = document.getElementById('frenteCodigo').value.trim().toUpperCase();
+    const planejado = parseFloat(document.getElementById('frentePlan').value) || 0;
+    const realizado = parseFloat(document.getElementById('frenteReal').value) || 0;
+    const destino = document.getElementById('frenteDestino').value;
+    const status = document.getElementById('frenteStatus').value;
+    const obs = document.getElementById('frenteObs').value.trim();
+    const fe = parseFloat(document.getElementById('frenteFe')?.value) || 0;
+    const pc = parseFloat(document.getElementById('frentePc')?.value) || 0;
+    const ppc = parseFloat(document.getElementById('frentePpc')?.value) || 0;
+    const justificativa = document.getElementById('frenteJustificativa')?.value?.trim() || '';
+
+    if (!codigo) { this.showToast('Digite o código da frente!', 'error'); return; }
+
+    const frente = {
+      codigo, planejado, realizado, destino, status, obs, fe, pc, ppc, justificativa,
+      fotos: this.tempFotos,
+      data: new Date().toISOString()
+    };
+
+    // Preserve existing properties when editing
+    if (this.currentFrenteIndex !== null) {
+      const existing = this.data.frentes[this.currentFrenteIndex];
+      // Keep sheet metadata
+      frente.sheetName = existing.sheetName || frente.sheetName;
+      frente.sectionKey = existing.sectionKey || frente.sectionKey;
+      frente.sectionTitle = existing.sectionTitle || frente.sectionTitle;
+      frente.sourceOrder = existing.sourceOrder;
+      frente.rowIndex = existing.rowIndex;
+      frente.tipo = existing.tipo || 'minério';
+      frente.usina = existing.usina;
+      // UPDATE in place - do NOT create a new entry
+      this.data.frentes[this.currentFrenteIndex] = frente;
+    } else {
+      this.data.frentes.push(frente);
+    }
+
+    this.saveData();
+    this.updateUI();
+    this.closeModalFrente();
+    this.showToast(this.currentFrenteIndex !== null ? 'Frente atualizada!' : 'Frente adicionada!');
+  };
+
+  // ========== FIX: Dynamic destinations from sheet tabs ==========
+  const originalImport = app.importFile ? app.importFile.bind(app) : null;
+  if (originalImport) {
+    const _origImport = app.importFile.bind(app);
+    app.importFile = async function(input) {
+      await _origImport(input);
+      // After import, update destination options from sheet names
+      this.updateDestinoOptions();
+    };
+  }
+
+  app.updateDestinoOptions = function() {
+    const destinos = new Set();
+    // Collect destinations from all fronts
+    (this.data.frentes || []).forEach(f => {
+      if (f.destino) destinos.add(f.destino);
+    });
+    // Collect from sheet names
+    (this.data.sheetOrder || []).forEach(name => {
+      // Extract destination-like names
+      if (/Minério|Hopper|HP|CR|Estéril/i.test(name)) {
+        const match = name.match(/(?:Minério_)?(.+)/);
+        if (match) destinos.add(match[1].replace(/_/g, '/'));
+      }
+    });
+    // Default destinations
+    ['11CR12','11CR13','11CR14','BR02','Usina 2','Usina 3'].forEach(d => destinos.add(d));
+    
+    // Update select element
+    const sel = document.getElementById('frenteDestino');
+    if (sel) {
+      const current = sel.value;
+      sel.innerHTML = '';
+      [...destinos].sort().forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        sel.appendChild(opt);
+      });
+      if (current && destinos.has(current)) sel.value = current;
+    }
+  };
+
+  // Update destinations on modal open
+  const origAddManual = app.addFrenteManual ? app.addFrenteManual.bind(app) : null;
+  if (origAddManual) {
+    app.addFrenteManual = function() {
+      origAddManual();
+      this.updateDestinoOptions();
+    };
+  }
+  const origEdit = app.editFrente ? app.editFrente.bind(app) : null;
+  if (origEdit) {
+    app.editFrente = function(i) {
+      origEdit(i);
+      this.updateDestinoOptions();
+      // Restore the correct destination after updating options
+      const f = this.data.frentes[i];
+      if (f) document.getElementById('frenteDestino').value = f.destino || '11CR12';
+    };
+  }
+
+  // ========== Highlight editable fields ==========
+  app.highlightEditableFields = function() {
+    document.querySelectorAll('input[type="number"], input[type="text"], textarea, select').forEach(el => {
+      if (el.closest('#authScreen') || el.closest('.hidden')) return;
+      if (!el.readOnly && !el.disabled) {
+        el.classList.add('editable-highlight');
+      }
+    });
+  };
+  // Call after UI updates
+  const origUpdateUI = app.updateUI.bind(app);
+  app.updateUI = function() {
+    origUpdateUI();
+    setTimeout(() => this.highlightEditableFields(), 200);
+  };
+
+})();
+</script>
+
+<script id="service-worker-register">
+// Register Service Worker for offline capability
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE_NAME = 'naza-field-pro-v7';
+    const CDN_URLS = [
+      'https://cdn.tailwindcss.com',
+      'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+      'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js',
+      'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js',
+      'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'
+    ];
+
+    self.addEventListener('install', event => {
+      event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+          return Promise.allSettled(CDN_URLS.map(url => cache.add(url).catch(()=>{})));
+        }).then(() => self.skipWaiting())
+      );
+    });
+
+    self.addEventListener('activate', event => {
+      event.waitUntil(
+        caches.keys().then(keys => Promise.all(
+          keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+        )).then(() => self.clients.claim())
+      );
+    });
+
+    self.addEventListener('fetch', event => {
+      const url = event.request.url;
+      // Cache-first for CDN resources
+      if (CDN_URLS.some(cdn => url.startsWith(cdn.split('?')[0])) || url.includes('fonts.gstatic.com')) {
+        event.respondWith(
+          caches.match(event.request).then(cached => {
+            if (cached) return cached;
+            return fetch(event.request).then(response => {
+              if (response.ok) {
+                const clone = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+              }
+              return response;
+            }).catch(() => new Response('Offline', {status:503}));
+          })
+        );
+        return;
+      }
+      // Network-first for HTML and API
+      if (event.request.mode === 'navigate') {
+        event.respondWith(
+          caches.match(event.request).then(cached => {
+            return fetch(event.request).then(response => {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+              return response;
+            }).catch(() => cached || new Response('<h1>Offline - Recarregue quando houver conexão</h1>', {headers:{'Content-Type':'text/html'}}));
+          })
+        );
+        return;
+      }
+      // Default: network first, fallback cache
+      event.respondWith(
+        fetch(event.request).then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return response;
+        }).catch(() => caches.match(event.request))
+      );
+    });
+  `;
+  
+  const blob = new Blob([swCode], {type: 'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl, {scope: '/'}).then(reg => {
+    console.log('Service Worker registrado para modo offline');
+  }).catch(err => {
+    console.warn('SW registration failed (normal em file://):', err);
+  });
+}
+
+// Connectivity monitoring
+setInterval(() => {
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  if (!dot || !label) return;
+  if (dot.className.includes('syncing')) return;
+  if (navigator.onLine) {
+    dot.className = 'dot online';
+    label.textContent = 'Online';
+  } else {
+    dot.className = 'dot offline';
+    label.textContent = 'Offline';
+  }
+}, 5000);
+</script>
+
+<style id="sim-impact-style">
+/* Tooltip discreto: pequeno ⚡ no canto com tooltip no hover */
+.sim-impact-field { position:relative }
+.sim-impact-field::after {
+  content:'⚡';
+  position:absolute; top:2px; right:6px;
+  font-size:14px; z-index:3;
+  cursor:help;
+  opacity:0.6;
+  transition:opacity 0.2s;
+}
+.sim-impact-field:hover::after { opacity:1; }
+.sim-impact-field::before {
+  content:attr(data-sim-tip);
+  position:absolute; top:-28px; right:0;
+  font-size:10px; font-weight:700;
+  background:#1e293b; color:#f8fafc;
+  padding:3px 10px; border-radius:6px;
+  white-space:nowrap; z-index:10;
+  pointer-events:none;
+  opacity:0; transition:opacity 0.2s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
+}
+.sim-impact-field:hover::before { opacity:1; }
+
+/* Bordas coloridas discretas por tipo */
+.sim-impact-recon input { border-color:#3b82f6 !important; }
+.sim-impact-retomada input { border-color:#10b981 !important; }
+.sim-impact-frente input { border-color:#ec4899 !important; }
+.sim-impact-sheet input, .sim-impact-sheet td { border-color:#8b5cf6 !important; }
+.sim-impact-field input { border-color:#f59e0b !important; }
+
+/* Legenda na simulação */
+.sim-legend-box {
+  background:linear-gradient(135deg,#fffbeb,#fef3c7);
+  border:2px solid #f59e0b;
+  border-radius:16px;
+  padding:16px 20px;
+  margin-bottom:18px;
+}
+.sim-legend-box h4 { font-size:14px; font-weight:900; color:#92400e; margin-bottom:10px; }
+.sim-legend-row { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:12px; font-weight:700; }
+.sim-legend-dot { width:14px; height:14px; border-radius:4px; flex-shrink:0; border:2px solid; }
+.sim-legend-dot.frente { background:#fce7f3; border-color:#ec4899; }
+.sim-legend-dot.recon { background:#dbeafe; border-color:#3b82f6; }
+.sim-legend-dot.retomada { background:#d1fae5; border-color:#10b981; }
+.sim-legend-dot.planilha { background:#ede9fe; border-color:#8b5cf6; }
+.sim-legend-dot.simulacao { background:#fef3c7; border-color:#f59e0b; }
+
+/* Painel inline editável */
+.sim-inline-section {
+  background:#fff; border-radius:16px; border:2px solid #e2e8f0;
+  padding:16px; margin-top:16px;
+}
+.sim-inline-section h4 {
+  font-size:14px; font-weight:900; margin-bottom:12px;
+  display:flex; align-items:center; gap:8px;
+}
+.sim-inline-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; }
+.sim-inline-item { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px; }
+.sim-inline-item label { font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px; }
+.sim-inline-item input, .sim-inline-item select {
+  width:100%; border:2px solid #cbd5e1; border-radius:8px; padding:6px 10px;
+  font-size:14px; font-weight:700; color:#0f172a;
+  transition:border-color 0.2s;
+}
+.sim-inline-item input:focus, .sim-inline-item select:focus {
+  border-color:#3b82f6; outline:none; box-shadow:0 0 0 3px rgba(59,130,246,0.15);
+}
+.sim-inline-item .origin { font-size:9px; color:#94a3b8; margin-top:2px; }
+
+/* Painel resumo (read-only) */
+.sim-source-panel {
+  background:#fff; border:2px solid #e2e8f0; border-radius:16px;
+  padding:16px; margin-top:16px;
+}
+.sim-source-panel h4 { font-size:14px; font-weight:900; color:#0b2f7b; margin-bottom:12px; }
+.sim-source-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+.sim-source-item { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; }
+.sim-source-item label { font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; display:block; margin-bottom:4px; }
+.sim-source-item .val { font-size:18px; font-weight:900; color:#0b2f7b; }
+.sim-source-item .origin { font-size:9px; color:#94a3b8; margin-top:2px; }
+
+/* Filtro retomadas */
+.ret-filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.ret-filter-btn { padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; border:2px solid #cbd5e1; background:#f8fafc; color:#475569; cursor:pointer; transition:all 0.2s; }
+.ret-filter-btn.active, .ret-filter-btn:hover { background:#0066CC; color:#fff; border-color:#0066CC; }
+</style>
+
+<script id="v8-simulation-impact-highlights">
+(function(){
+  if (!window.app) return;
+
+  // ===== FIX: Usina 2 chart =====
+  const origSwitchTab = app.switchTab.bind(app);
+  app.switchTab = function(tab) {
+    const result = origSwitchTab(tab);
+    if (tab === 'reconciliacao') {
+      setTimeout(() => {
+        const c2el = document.getElementById('chartU2');
+        if (c2el) {
+          if (this.charts.u2) { try { this.charts.u2.destroy(); } catch(e){} this.charts.u2 = null; }
+          const u2 = this.data?.reconciliacao?.u2 || {};
+          this.charts.u2 = new Chart(c2el, {
+            type: 'bar',
+            data: { labels: ['ROM (t)', 'Fe (%)', 'PPC (%)'], datasets: [
+              { label: 'Planejado', data: [Number(u2.rom?.plan||0), Number(u2.fe?.plan||0), Number(u2.ppc?.plan||0)], backgroundColor: '#0066CC' },
+              { label: 'Real', data: [Number(u2.rom?.real||0), Number(u2.fe?.real||0), Number(u2.ppc?.real||0)], backgroundColor: '#00C851' }
+            ]},
+            options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+          });
+        }
+        const c3el = document.getElementById('chartU3');
+        if (c3el) {
+          if (this.charts.u3) { try { this.charts.u3.destroy(); } catch(e){} this.charts.u3 = null; }
+          const u3 = this.data?.reconciliacao?.u3 || {};
+          this.charts.u3 = new Chart(c3el, {
+            type: 'bar',
+            data: { labels: ['ROM (t)', 'Fe (%)', 'PPC (%)'], datasets: [
+              { label: 'Planejado', data: [Number(u3.rom?.plan||0), Number(u3.fe?.plan||0), Number(u3.ppc?.plan||0)], backgroundColor: '#00A0E3' },
+              { label: 'Real', data: [Number(u3.rom?.real||0), Number(u3.fe?.real||0), Number(u3.ppc?.real||0)], backgroundColor: '#00C851' }
+            ]},
+            options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+          });
+        }
+      }, 100);
+    }
+    if (tab === 'simulacao') {
+      setTimeout(() => { app.renderSimInlinePanels(); }, 150);
+    }
+    return result;
+  };
+
+  // ===== TOOLTIP MARKERS =====
+  app.markSimulationImpactFields = function() {
+    document.querySelectorAll('.sim-impact-field,.sim-impact-recon,.sim-impact-retomada,.sim-impact-frente,.sim-impact-sheet').forEach(el => {
+      el.classList.remove('sim-impact-field','sim-impact-recon','sim-impact-retomada','sim-impact-frente','sim-impact-sheet');
+      delete el.dataset.simTip;
+    });
+
+    // Reconciliação
+    document.querySelectorAll('[data-field*="_rom_real"],[data-field*="_fe_real"],[data-field*="_ppc_real"],[data-field*="_rom_plan"],[data-field*="_fe_plan"],[data-field*="_ppc_plan"]').forEach(el => {
+      const wrapper = el.closest('div');
+      if (wrapper) { wrapper.classList.add('sim-impact-field','sim-impact-recon'); wrapper.dataset.simTip = 'Teor base da simulação'; }
+    });
+
+    // Retomadas
+    const retTab = document.getElementById('tab-retomadas');
+    if (retTab) {
+      retTab.querySelectorAll('input[type="number"]').forEach(el => {
+        const wrapper = el.closest('div');
+        if (wrapper && !wrapper.classList.contains('sim-impact-field')) { wrapper.classList.add('sim-impact-field','sim-impact-retomada'); wrapper.dataset.simTip = 'Rota do desviador'; }
+      });
+    }
+
+    // Simulação direta
+    ['sim_massaHora','sim_teorHora','sim_horasTurno','sim_recuperacao','sim_usinaAlvo','sim_terceiraUsina'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const wrapper = el.closest('div');
+        if (wrapper) { wrapper.classList.add('sim-impact-field'); wrapper.dataset.simTip = 'Parâmetro direto'; }
+      }
+    });
+
+    // Planilhas
+    const planTab = document.getElementById('tab-planilhas');
+    if (planTab) {
+      planTab.querySelectorAll('.sheet-grid td').forEach(td => {
+        const input = td.querySelector('input');
+        if (input && input.value.trim()) { td.classList.add('sim-impact-field','sim-impact-sheet'); td.dataset.simTip = 'Sincroniza com simulação'; }
+      });
+    }
+  };
+
+  // ===== LEGEND =====
+  app.addSimulationLegend = function() {
+    const simTab = document.getElementById('tab-simulacao');
+    if (!simTab || simTab.querySelector('.sim-legend-box')) return;
+    const firstChild = simTab.querySelector('.glass-panel');
+    if (!firstChild) return;
+    const legend = document.createElement('div');
+    legend.className = 'sim-legend-box';
+    legend.innerHTML = `
+      <h4>📊 DE ONDE VEM OS DADOS DA SIMULAÇÃO?</h4>
+      <p style="font-size:11px;color:#78716c;margin-bottom:8px">Passe o mouse sobre o ⚡ nos campos das outras abas para ver a conexão. Ou edite tudo aqui abaixo:</p>
+      <div class="sim-legend-row"><div class="sim-legend-dot simulacao"></div><span style="color:#92400e"><strong>Amarelo</strong> — Parâmetros diretos (Massa/h, Horas, Recuperação)</span></div>
+      <div class="sim-legend-row"><div class="sim-legend-dot frente"></div><span style="color:#be185d"><strong>Rosa</strong> — Frentes (massa + teores Fe, Pc, PPC)</span></div>
+      <div class="sim-legend-row"><div class="sim-legend-dot recon"></div><span style="color:#1d4ed8"><strong>Azul</strong> — Reconciliação (ROM, Fe, PPC plan/real)</span></div>
+      <div class="sim-legend-row"><div class="sim-legend-dot retomada"></div><span style="color:#047857"><strong>Verde</strong> — Retomadas (pilhas, massa, rota)</span></div>
+      <div class="sim-legend-row"><div class="sim-legend-dot planilha"></div><span style="color:#6d28d9"><strong>Roxo</strong> — Planilhas operacionais</span></div>
+    `;
+    firstChild.insertBefore(legend, firstChild.children[1] || null);
+  };
+
+  // ===== INLINE EDITABLE PANELS IN SIMULATION TAB =====
+  app.renderSimInlinePanels = function() {
+    const simTab = document.getElementById('tab-simulacao');
+    if (!simTab) return;
+    const glassPanel = simTab.querySelector('.glass-panel');
+    if (!glassPanel) return;
+
+    // Remove old inline panels
+    glassPanel.querySelectorAll('.sim-inline-section,.sim-source-panel').forEach(el => el.remove());
+
+    const num = (v,d=0)=>{ v=Number(v); return Number.isFinite(v)?v:d; };
+    const frentes = this.data.frentes || [];
+    const u2 = this.data.reconciliacao?.u2 || {};
+    const u3 = this.data.reconciliacao?.u3 || {};
+    const retomadas = this.data.retomadas || [];
+
+    // --- FRENTES INLINE ---
+    let frentesHTML = '';
+    frentes.forEach((f, i) => {
+      frentesHTML += `
+        <div class="sim-inline-item" style="border-left:3px solid #ec4899">
+          <label>${f.codigo || 'Frente '+(i+1)}</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">
+            <div><span style="font-size:9px;color:#94a3b8">Plan (t)</span><input type="number" step="0.01" value="${num(f.planejado)}" onchange="app.updateFrenteFromSim(${i},'planejado',this.value)"></div>
+            <div><span style="font-size:9px;color:#94a3b8">Real (t)</span><input type="number" step="0.01" value="${num(f.realizado)}" onchange="app.updateFrenteFromSim(${i},'realizado',this.value)"></div>
+            <div><span style="font-size:9px;color:#94a3b8">Fe %</span><input type="number" step="0.01" value="${f.fe!=null&&f.fe!==''?num(f.fe):''}" onchange="app.updateFrenteFromSim(${i},'fe',this.value)"></div>
+            <div><span style="font-size:9px;color:#94a3b8">PPC %</span><input type="number" step="0.01" value="${f.ppc!=null&&f.ppc!==''?num(f.ppc):''}" onchange="app.updateFrenteFromSim(${i},'ppc',this.value)"></div>
+          </div>
+        </div>`;
+    });
+    if (!frentes.length) frentesHTML = '<p style="color:#94a3b8;font-size:12px;padding:8px">Nenhuma frente cadastrada. Adicione na aba FRENTES.</p>';
+
+    const frentesSection = document.createElement('div');
+    frentesSection.className = 'sim-inline-section';
+    frentesSection.innerHTML = `
+      <h4 style="color:#be185d"><div class="sim-legend-dot frente" style="width:10px;height:10px"></div> FRENTES DE LAVRA (editável)</h4>
+      <div class="sim-inline-grid">${frentesHTML}</div>
+    `;
+    glassPanel.appendChild(frentesSection);
+
+    // --- RECONCILIAÇÃO INLINE ---
+    const reconSection = document.createElement('div');
+    reconSection.className = 'sim-inline-section';
+    reconSection.innerHTML = `
+      <h4 style="color:#1d4ed8"><div class="sim-legend-dot recon" style="width:10px;height:10px"></div> RECONCILIAÇÃO (editável)</h4>
+      <div class="sim-inline-grid">
+        <div class="sim-inline-item" style="border-left:3px solid #3b82f6">
+          <label>U2 ROM Plan</label><input type="number" step="0.01" value="${num(u2.rom?.plan)}" onchange="app.updateReconFromSim('u2','rom','plan',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #3b82f6">
+          <label>U2 ROM Real</label><input type="number" step="0.01" value="${num(u2.rom?.real)}" onchange="app.updateReconFromSim('u2','rom','real',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #3b82f6">
+          <label>U2 Fe Plan</label><input type="number" step="0.01" value="${num(u2.fe?.plan)}" onchange="app.updateReconFromSim('u2','fe','plan',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #3b82f6">
+          <label>U2 Fe Real</label><input type="number" step="0.01" value="${num(u2.fe?.real)}" onchange="app.updateReconFromSim('u2','fe','real',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #3b82f6">
+          <label>U2 PPC Plan</label><input type="number" step="0.01" value="${num(u2.ppc?.plan)}" onchange="app.updateReconFromSim('u2','ppc','plan',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #3b82f6">
+          <label>U2 PPC Real</label><input type="number" step="0.01" value="${num(u2.ppc?.real)}" onchange="app.updateReconFromSim('u2','ppc','real',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #00A0E3">
+          <label>U3 ROM Plan</label><input type="number" step="0.01" value="${num(u3.rom?.plan)}" onchange="app.updateReconFromSim('u3','rom','plan',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #00A0E3">
+          <label>U3 ROM Real</label><input type="number" step="0.01" value="${num(u3.rom?.real)}" onchange="app.updateReconFromSim('u3','rom','real',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #00A0E3">
+          <label>U3 Fe Plan</label><input type="number" step="0.01" value="${num(u3.fe?.plan)}" onchange="app.updateReconFromSim('u3','fe','plan',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #00A0E3">
+          <label>U3 Fe Real</label><input type="number" step="0.01" value="${num(u3.fe?.real)}" onchange="app.updateReconFromSim('u3','fe','real',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #00A0E3">
+          <label>U3 PPC Plan</label><input type="number" step="0.01" value="${num(u3.ppc?.plan)}" onchange="app.updateReconFromSim('u3','ppc','plan',this.value)">
+        </div>
+        <div class="sim-inline-item" style="border-left:3px solid #00A0E3">
+          <label>U3 PPC Real</label><input type="number" step="0.01" value="${num(u3.ppc?.real)}" onchange="app.updateReconFromSim('u3','ppc','real',this.value)">
+        </div>
+      </div>
+    `;
+    glassPanel.appendChild(reconSection);
+
+    // --- RETOMADAS INLINE ---
+    let retHTML = '';
+    retomadas.forEach((r, i) => {
+      retHTML += `
+        <div class="sim-inline-item" style="border-left:3px solid #10b981">
+          <label>${r.origem || 'Pilha '+(i+1)}</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">
+            <div><span style="font-size:9px;color:#94a3b8">Qtd (t)</span><input type="number" step="0.01" value="${num(r.quantidade)}" onchange="app.updateRetomadaFromSim(${i},'quantidade',this.value)"></div>
+            <div><span style="font-size:9px;color:#94a3b8">Fe %</span><input type="number" step="0.001" value="${num(r.fe)}" onchange="app.updateRetomadaFromSim(${i},'fe',this.value)"></div>
+          </div>
+          <div class="origin">${r.status||'programada'} | ${r.sectionKey||''}</div>
+        </div>`;
+    });
+    if (!retomadas.length) retHTML = '<p style="color:#94a3b8;font-size:12px;padding:8px">Nenhuma retomada cadastrada.</p>';
+
+    const retSection = document.createElement('div');
+    retSection.className = 'sim-inline-section';
+    retSection.innerHTML = `
+      <h4 style="color:#047857"><div class="sim-legend-dot retomada" style="width:10px;height:10px"></div> RETOMADAS (editável)</h4>
+      <div class="sim-inline-grid">${retHTML}</div>
+    `;
+    glassPanel.appendChild(retSection);
+
+    // --- RESUMO (read-only) ---
+    const totalReal = frentes.reduce((s,f) => s + num(f.realizado), 0);
+    const totalPlan = frentes.reduce((s,f) => s + num(f.planejado), 0);
+    // Média ponderada por massa (realizado) - como na operação real de lavra
+    const frentesComFe = frentes.filter(f => f.fe != null && f.fe !== 0 && f.fe !== '' && num(f.realizado) > 0);
+    const totalMassaFe = frentesComFe.reduce((s,f) => s + num(f.realizado), 0);
+    const mediaFe = totalMassaFe > 0 ? frentesComFe.reduce((s,f) => s + num(f.fe) * num(f.realizado), 0) / totalMassaFe : 0;
+
+    const frentesComPc = frentes.filter(f => f.pc != null && f.pc !== 0 && f.pc !== '' && num(f.realizado) > 0);
+    const totalMassaPc = frentesComPc.reduce((s,f) => s + num(f.realizado), 0);
+    const mediaPc = totalMassaPc > 0 ? frentesComPc.reduce((s,f) => s + num(f.pc) * num(f.realizado), 0) / totalMassaPc : 0;
+
+    const frentesComPpc = frentes.filter(f => f.ppc != null && f.ppc !== 0 && f.ppc !== '' && num(f.realizado) > 0);
+    const totalMassaPpc = frentesComPpc.reduce((s,f) => s + num(f.realizado), 0);
+    const mediaPpc = totalMassaPpc > 0 ? frentesComPpc.reduce((s,f) => s + num(f.ppc) * num(f.realizado), 0) / totalMassaPpc : 0;
+
+    const sourcePanel = document.createElement('div');
+    sourcePanel.className = 'sim-source-panel';
+    sourcePanel.innerHTML = `
+      <h4>📋 RESUMO CALCULADO (média ponderada pela massa realizada)</h4>
+      <div class="sim-source-grid">
+        <div class="sim-source-item" style="border-left:3px solid #ec4899">
+          <label>Massa Real Total</label>
+          <div class="val">${totalReal.toLocaleString('pt-BR',{maximumFractionDigits:0})} t</div>
+        </div>
+        <div class="sim-source-item" style="border-left:3px solid #ec4899">
+          <label>Massa Plan Total</label>
+          <div class="val">${totalPlan.toLocaleString('pt-BR',{maximumFractionDigits:0})} t</div>
+        </div>
+        <div class="sim-source-item" style="border-left:3px solid #f59e0b">
+          <label>Fe Médio Ponderado</label>
+          <div class="val">${mediaFe ? mediaFe.toFixed(2)+'%' : '—'}</div>
+          <div class="origin">Σ(Fe×massa) / Σmassa</div>
+        </div>
+        <div class="sim-source-item" style="border-left:3px solid #f59e0b">
+          <label>Pc Médio Ponderado</label>
+          <div class="val">${mediaPc ? mediaPc.toFixed(3)+'%' : '—'}</div>
+          <div class="origin">Σ(Pc×massa) / Σmassa</div>
+        </div>
+        <div class="sim-source-item" style="border-left:3px solid #f59e0b">
+          <label>PPC Médio Ponderado</label>
+          <div class="val">${mediaPpc ? mediaPpc.toFixed(2)+'%' : '—'}</div>
+          <div class="origin">Σ(PPC×massa) / Σmassa</div>
+        </div>
+        <div class="sim-source-item" style="border-left:3px solid #ec4899">
+          <label>Frentes Ativas</label>
+          <div class="val">${frentes.filter(f => num(f.realizado) > 0).length} de ${frentes.length}</div>
+        </div>
+      </div>
+    `;
+    glassPanel.appendChild(sourcePanel);
+  };
+
+  // ===== DATA UPDATE FUNCTIONS (from simulation tab) =====
+  app.updateFrenteFromSim = function(idx, field, value) {
+    if (!this.data.frentes[idx]) return;
+    this.data.frentes[idx][field] = value === '' ? null : Number(value);
+    this.saveData();
+    this.renderSimInlinePanels();
+    try { this.runSimulation(); } catch(e){}
+  };
+
+  app.updateReconFromSim = function(usina, metric, type, value) {
+    if (!this.data.reconciliacao) this.data.reconciliacao = {};
+    if (!this.data.reconciliacao[usina]) this.data.reconciliacao[usina] = {};
+    if (!this.data.reconciliacao[usina][metric]) this.data.reconciliacao[usina][metric] = {plan:0,real:0};
+    this.data.reconciliacao[usina][metric][type] = Number(value) || 0;
+    this.saveData();
+    try { this.runSimulation(); } catch(e){}
+  };
+
+  app.updateRetomadaFromSim = function(idx, field, value) {
+    if (!this.data.retomadas[idx]) return;
+    this.data.retomadas[idx][field] = Number(value) || 0;
+    this.saveData();
+    this.renderSimInlinePanels();
+    try { this.runSimulation(); } catch(e){}
+  };
+
+  // ===== RETOMADAS FILTER =====
+  app.addRetomadaFilters = function() {
+    const retTab = document.getElementById('tab-retomadas');
+    if (!retTab || retTab.querySelector('.ret-filter-bar')) return;
+    const h3 = retTab.querySelector('h3');
+    if (!h3) return;
+    const bar = document.createElement('div');
+    bar.className = 'ret-filter-bar';
+    bar.innerHTML = `
+      <button class="ret-filter-btn active" onclick="app.filterRetomadas('todos')">Todos</button>
+      <button class="ret-filter-btn" onclick="app.filterRetomadas('programada')">Programada</button>
+      <button class="ret-filter-btn" onclick="app.filterRetomadas('em_andamento')">Em Andamento</button>
+      <button class="ret-filter-btn" onclick="app.filterRetomadas('concluida')">Concluída</button>
+      <button class="ret-filter-btn" onclick="app.filterRetomadas('suspensa')">Suspensa</button>
+    `;
+    h3.insertAdjacentElement('afterend', bar);
+  };
+
+  app.filterRetomadas = function(status) {
+    const retTab = document.getElementById('tab-retomadas');
+    if (!retTab) return;
+    retTab.querySelectorAll('.ret-filter-btn').forEach(b => b.classList.remove('active'));
+    retTab.querySelector(`.ret-filter-btn[onclick*="${status}"]`)?.classList.add('active');
+    const list = retTab.querySelector('#retomadasList');
+    if (!list) return;
+    list.querySelectorAll('[data-status]').forEach(el => {
+      if (status === 'todos' || el.dataset.status === status) {
+        el.style.display = '';
+      } else {
+        el.style.display = 'none';
+      }
+    });
+  };
+
+  // ===== Mark frente edit modal fields =====
+  const origAddManual = app.addFrenteManual.bind(app);
+  app.addFrenteManual = function() {
+    origAddManual();
+    setTimeout(() => {
+      ['frentePlan','frenteReal','frenteFe','frentePc','frentePpc'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          const wrapper = el.closest('div');
+          if (wrapper) { wrapper.classList.add('sim-impact-field','sim-impact-frente'); wrapper.dataset.simTip = 'Blend de qualidade'; }
+        }
+      });
+    }, 100);
+  };
+
+  const origEdit = app.editFrente.bind(app);
+  app.editFrente = function(i) {
+    origEdit(i);
+    setTimeout(() => {
+      ['frentePlan','frenteReal','frenteFe','frentePc','frentePpc'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          const wrapper = el.closest('div');
+          if (wrapper) { wrapper.classList.add('sim-impact-field','sim-impact-frente'); wrapper.dataset.simTip = 'Blend de qualidade'; }
+        }
+      });
+    }, 100);
+  };
+
+  // ===== Hook updateUI =====
+  const origUI = app.updateUI.bind(app);
+  app.updateUI = function() {
+    origUI();
+    setTimeout(() => {
+      this.markSimulationImpactFields();
+      this.addSimulationLegend();
+      this.addRetomadaFilters();
+    }, 300);
+  };
+
+  // ===== Hook runSimulation =====
+  const origRun = app.runSimulation.bind(app);
+  app.runSimulation = function() {
+    const result = origRun();
+    return result;
+  };
+
+  // Initial apply
+  setTimeout(() => {
+    try { app.markSimulationImpactFields(); } catch(e){}
+    try { app.addSimulationLegend(); } catch(e){}
+    try { app.addRetomadaFilters(); } catch(e){}
+  }, 500);
+})();
+</script>
+
+
+<script id="enhanced-simulation-engine">
+(function(){
+  if (!window.app) { setTimeout(arguments.callee, 100); return; }
+
+  const SIM_CFG = { metaFeMin: 40.5, metaFeMax: 42.0, metaMassaMin: 1500, metaRecMin: 94 };
+
+  // ===== MAIN UPDATE FUNCTION =====
+  app.updateSimulacaoEnhanced = function() {
+    const massa = parseFloat(document.getElementById('sliderMassa')?.value || 1800);
+    const teor = parseFloat(document.getElementById('sliderTeor')?.value || 41.3);
+    const horas = parseFloat(document.getElementById('sliderHoras')?.value || 12);
+    const rec = parseFloat(document.getElementById('sliderRecuperacao')?.value || 96);
+    const terceira = parseFloat(document.getElementById('sliderTerceira')?.value || 0);
+    const usina3 = document.getElementById('toggleUsina')?.checked || false;
+
+    // Update labels
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setText('sliderMassaValue', massa.toLocaleString('pt-BR') + ' t');
+    setText('sliderTeorValue', teor.toFixed(1) + '%');
+    setText('sliderHorasValue', horas + ' h');
+    setText('sliderRecuperacaoValue', rec + '%');
+    setText('sliderTerceiraValue', terceira + '%');
+    setText('toggleUsinaLabel', usina3 ? 'Usina 3' : 'Usina 2');
+
+    // Calculate
+    const turno = massa * horas;
+    const dia = turno * 2;
+    const massaRec = turno * (rec / 100);
+    const metalTurno = massaRec * (teor / 100);
+
+    // Use weighted average from frentes if available
+    const frentes = (app.data && app.data.frentes) || [];
+    let blendFe = teor;
+    if (frentes.length > 0) {
+      let sumMF = 0, sumM = 0;
+      frentes.forEach(f => {
+        const m = parseFloat(f.realizado || f.planejado || 0);
+        const fe = parseFloat(f.fe || 0);
+        if (m > 0 && fe > 0) { sumMF += m * fe; sumM += m; }
+      });
+      if (sumM > 0) blendFe = sumMF / sumM;
+    }
+
+    // Update previews
+    setText('previewTurno', Math.round(turno).toLocaleString('pt-BR'));
+    setText('previewDia', Math.round(dia).toLocaleString('pt-BR'));
+    setText('previewMetalTurno', Math.round(metalTurno).toLocaleString('pt-BR'));
+    setText('previewBlend', blendFe.toFixed(1) + '%');
+
+    // Sync with hidden original fields for compatibility
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    setVal('sim_massaHora', massa);
+    setVal('sim_teorHora', teor);
+    setVal('sim_horasTurno', horas);
+    setVal('sim_recuperacao', rec);
+    setVal('sim_terceiraUsina', terceira);
+    const sel = document.getElementById('sim_usinaAlvo');
+    if (sel) sel.value = usina3 ? 'Usina 3' : 'Usina 2';
+
+    // Update KPI cards
+    app.updateEnhancedKPIs(massa, teor, rec, metalTurno, horas);
+    // Update alerts
+    app.updateSmartAlerts(massa, teor, rec, terceira);
+    // Update gauges
+    app.updateEnhancedGauges(blendFe, rec, massa, horas);
+    // Update Firebase status
+    app.updateFirebaseStatus();
+  };
+
+  // ===== KPI CARDS =====
+  app.updateEnhancedKPIs = function(massa, teor, rec, metal, horas) {
+    const turno = massa * horas;
+    const metaMassa = 2000 * horas;
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    const setWidth = (id, w) => { const el = document.getElementById(id); if (el) el.style.width = Math.min(100, w) + '%'; };
+    const setAlert = (id, cls, html) => { const el = document.getElementById(id); if (el) { el.className = 'deviation-alert ' + cls; el.innerHTML = html; } };
+
+    // Massa/Turno
+    setText('kpiMassaTurnoValue', Math.round(turno).toLocaleString('pt-BR') + ' t');
+    setWidth('kpiMassaTurnoBar', (turno / metaMassa) * 100);
+    const diffM = ((turno - metaMassa) / metaMassa * 100);
+    if (diffM > 5) setAlert('kpiMassaTurnoAlert', 'warning', '⚠️ +' + diffM.toFixed(1) + '% acima');
+    else if (diffM < -5) setAlert('kpiMassaTurnoAlert', 'danger', '🔴 ' + diffM.toFixed(1) + '% abaixo');
+    else setAlert('kpiMassaTurnoAlert', 'success', '✅ Dentro da meta');
+
+    // Teor
+    setText('kpiTeorMedioValue', teor.toFixed(1) + '%');
+    setWidth('kpiTeorMedioBar', ((teor - 35) / 15) * 100);
+    if (teor < SIM_CFG.metaFeMin) setAlert('kpiTeorMedioAlert', 'danger', '🔴 Teor crítico');
+    else if (teor > SIM_CFG.metaFeMax) setAlert('kpiTeorMedioAlert', 'warning', '⚡ Teor alto');
+    else setAlert('kpiTeorMedioAlert', 'success', '✅ Target OK');
+
+    // Recuperação
+    setText('kpiRecuperacaoValue', rec.toFixed(1) + '%');
+    setWidth('kpiRecuperacaoBar', rec);
+    if (rec < SIM_CFG.metaRecMin) setAlert('kpiRecuperacaoAlert', 'danger', '🔴 Recuperação baixa');
+    else if (rec > 98) setAlert('kpiRecuperacaoAlert', 'warning', '⚡ Próximo ao limite');
+    else setAlert('kpiRecuperacaoAlert', 'success', '✅ Eficiente');
+
+    // Metal
+    const metaMetal = 800;
+    setText('kpiMetalValue', Math.round(metal).toLocaleString('pt-BR') + ' t');
+    setWidth('kpiMetalBar', (metal / metaMetal) * 100);
+    if (metal < metaMetal * 0.9) setAlert('kpiMetalAlert', 'warning', '⚡ Abaixo do esperado');
+    else setAlert('kpiMetalAlert', 'success', '✅ Projeção favorável');
+  };
+
+  // ===== SMART ALERTS =====
+  app.updateSmartAlerts = function(massa, teor, rec, terceira) {
+    const container = document.getElementById('smartAlertsContainer');
+    if (!container) return;
+    let alerts = [];
+    if (teor < SIM_CFG.metaFeMin) alerts.push({type:'critical',icon:'🔴',title:'Teor Crítico',msg:'Fe abaixo de 40.5%. Verificar blend e frentes.'});
+    if (massa < SIM_CFG.metaMassaMin) alerts.push({type:'warning',icon:'🟡',title:'Vazão Baixa',msg:'Massa horária abaixo de 1.500 t/h.'});
+    if (terceira > 0 && terceira < 20) alerts.push({type:'info',icon:'🔵',title:'3ª Usina Parcial',msg:'Ativação abaixo de 20% pode causar instabilidade.'});
+    if (rec < SIM_CFG.metaRecMin) alerts.push({type:'critical',icon:'🔴',title:'Perdas de Recuperação',msg:'Recuperação abaixo de 94%.'});
+    if (!alerts.length) alerts.push({type:'success',icon:'✅',title:'Operação Normal',msg:'Todos os indicadores dentro das faixas.'});
+    container.innerHTML = alerts.map(a => '<div class="smart-alert '+a.type+'"><div class="smart-alert-icon">'+a.icon+'</div><div class="smart-alert-content"><h4>'+a.title+'</h4><p>'+a.msg+'</p></div></div>').join('');
+  };
+
+  // ===== GAUGES =====
+  app._simGauges = {};
+  app.initEnhancedGauges = function() {
+    const gaugeOpts = (color) => ({
+      type:'doughnut', data:{datasets:[{data:[0,100],backgroundColor:[color,'rgba(200,200,200,0.2)'],borderWidth:0,cutout:'75%'}]},
+      options:{responsive:true,maintainAspectRatio:false,rotation:-90,circumference:180,plugins:{legend:{display:false},tooltip:{enabled:false}}}
+    });
+    ['gaugeEficiencia','gaugeQualidade','gaugeCapacidade'].forEach((id, i) => {
+      const ctx = document.getElementById(id);
+      if (ctx && typeof Chart !== 'undefined') {
+        try { app._simGauges[id] = new Chart(ctx, gaugeOpts(['#00C851','#0066CC','#FFBB33'][i])); } catch(e){}
+      }
+    });
+  };
+
+  app.updateEnhancedGauges = function(blendFe, rec, massa, horas) {
+    const updateGauge = (id, val, max, labelId, labelText) => {
+      const chart = app._simGauges[id];
+      if (chart) { const pct = Math.min(100, (val/max)*100); chart.data.datasets[0].data = [pct, 100-pct]; chart.update('none'); }
+      const el = document.getElementById(labelId);
+      if (el) el.textContent = labelText;
+    };
+    const eficiencia = Math.min(100, (rec * 0.5) + ((blendFe >= SIM_CFG.metaFeMin && blendFe <= SIM_CFG.metaFeMax) ? 50 : (50 - Math.abs(blendFe - 41.25) * 5)));
+    updateGauge('gaugeEficiencia', eficiencia, 100, 'gaugeEficienciaValue', Math.round(eficiencia) + '%');
+    updateGauge('gaugeQualidade', blendFe, 50, 'gaugeQualidadeValue', blendFe.toFixed(1) + '%');
+    const capUtil = Math.min(100, (massa * horas) / (2000 * horas) * 100);
+    updateGauge('gaugeCapacidade', capUtil, 100, 'gaugeCapacidadeValue', Math.round(capUtil) + '%');
+  };
+
+  // ===== PROJEÇÃO HORÁRIA CHART =====
+  app._simProjecao = null;
+  app.initProjecaoChart = function() {
+    const ctx = document.getElementById('chartProjecaoHoraria');
+    if (!ctx || typeof Chart === 'undefined') return;
+    const horas = Array.from({length:12},(_,i)=>'H'+(i+1));
+    const massa = parseFloat(document.getElementById('sliderMassa')?.value || 1800);
+    const teor = parseFloat(document.getElementById('sliderTeor')?.value || 41.3);
+    const massaData = horas.map(()=> massa + (Math.random()-0.5)*100);
+    const teorData = horas.map(()=> teor + (Math.random()-0.5)*0.8);
+    try {
+      app._simProjecao = new Chart(ctx, {
+        type:'bar', data:{ labels:horas, datasets:[
+          {label:'Massa (t)',data:massaData,backgroundColor:'rgba(0,102,204,0.7)',borderColor:'#0066CC',borderWidth:2,yAxisID:'y',borderRadius:4},
+          {label:'Teor Fe (%)',data:teorData,type:'line',borderColor:'#00C851',backgroundColor:'rgba(0,200,81,0.1)',borderWidth:3,pointBackgroundColor:'#00C851',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,fill:true,tension:0.4,yAxisID:'y1'},
+          {label:'Meta Fe',data:Array(12).fill(SIM_CFG.metaFeMin),type:'line',borderColor:'#FF4444',borderWidth:2,borderDash:[5,5],pointRadius:0,fill:false,yAxisID:'y1'}
+        ]}, options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+          plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:20,font:{size:12,weight:'bold'}}}},
+          scales:{x:{grid:{display:false}},y:{type:'linear',position:'left',title:{display:true,text:'Massa (t)',font:{weight:'bold'}},grid:{color:'rgba(0,0,0,0.05)'}},
+            y1:{type:'linear',position:'right',title:{display:true,text:'Teor Fe (%)',font:{weight:'bold'}},grid:{drawOnChartArea:false},min:35,max:50}}}
+      });
+    } catch(e){ console.error('Chart error:', e); }
+  };
+
+  // ===== CENÁRIOS =====
+  app.salvarCenario = function() {
+    const c = {
+      id: Date.now(),
+      nome: 'Cenário ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+      massa: parseFloat(document.getElementById('sliderMassa')?.value||1800),
+      teor: parseFloat(document.getElementById('sliderTeor')?.value||41.3),
+      horas: parseFloat(document.getElementById('sliderHoras')?.value||12),
+      rec: parseFloat(document.getElementById('sliderRecuperacao')?.value||96),
+      terceira: parseFloat(document.getElementById('sliderTerceira')?.value||0),
+      usina: document.getElementById('toggleUsina')?.checked ? 'Usina 3' : 'Usina 2',
+      data: new Date().toISOString()
+    };
+    c.turno = c.massa * c.horas;
+    c.metal = c.turno * (c.rec/100) * (c.teor/100);
+    c.blend = c.teor;
+
+    let cenarios = [];
+    try { cenarios = JSON.parse(localStorage.getItem('naza_cenarios_sim') || '[]'); } catch(e){}
+    cenarios.push(c);
+    localStorage.setItem('naza_cenarios_sim', JSON.stringify(cenarios));
+
+    // Also save to Firestore
+    if (window.db && navigator.onLine) {
+      db.collection('cenarios_simulacao').add(c).catch(e => console.warn('Firebase save error:', e));
+    }
+
+    app.renderCenariosSalvos();
+    if (app.showToast) app.showToast('Cenário salvo!');
+  };
+
+  app.renderCenariosSalvos = function() {
+    const container = document.getElementById('cenariosSalvos');
+    const tbody = document.getElementById('comparisonTableBody');
+    if (!container) return;
+    let cenarios = [];
+    try { cenarios = JSON.parse(localStorage.getItem('naza_cenarios_sim') || '[]'); } catch(e){}
+
+    if (!cenarios.length) {
+      container.innerHTML = '<p class="text-gray-500 text-center col-span-3">Nenhum cenário salvo ainda.</p>';
+    } else {
+      container.innerHTML = cenarios.slice(-3).map(c => 
+        '<div class="scenario-card"><div class="flex justify-between items-start mb-3"><h5 class="font-bold text-primary">'+c.nome+'</h5><button onclick="app.excluirCenario('+c.id+')" class="text-red-500 hover:text-red-700 text-lg">×</button></div>'+
+        '<div class="space-y-2 text-sm"><div class="flex justify-between"><span class="text-gray-600">Massa/h:</span><span class="font-bold">'+c.massa.toLocaleString()+' t</span></div>'+
+        '<div class="flex justify-between"><span class="text-gray-600">Teor Fe:</span><span class="font-bold">'+c.teor+'%</span></div>'+
+        '<div class="flex justify-between"><span class="text-gray-600">Turno:</span><span class="font-bold">'+Math.round(c.turno).toLocaleString()+' t</span></div>'+
+        '<div class="flex justify-between"><span class="text-gray-600">Metal:</span><span class="font-bold">'+Math.round(c.metal).toLocaleString()+' t</span></div></div>'+
+        '<button onclick="app.carregarCenario('+c.id+')" class="mt-3 w-full py-2 bg-blue-100 text-blue-700 rounded-lg font-semibold text-sm hover:bg-blue-200 transition">Carregar</button></div>'
+      ).join('');
+    }
+
+    // Update comparison table
+    if (tbody) {
+      const atual = {
+        nome:'ATUAL',
+        massa: parseFloat(document.getElementById('sliderMassa')?.value||1800),
+        teor: parseFloat(document.getElementById('sliderTeor')?.value||41.3),
+        turno: parseFloat(document.getElementById('sliderMassa')?.value||1800) * parseFloat(document.getElementById('sliderHoras')?.value||12),
+        metal: 0, blend: 0
+      };
+      atual.metal = atual.turno * (parseFloat(document.getElementById('sliderRecuperacao')?.value||96)/100) * (atual.teor/100);
+      atual.blend = atual.teor;
+
+      const todos = [atual, ...cenarios.slice(-4)];
+      tbody.innerHTML = todos.map((c, idx) => {
+        const diff = idx === 0 ? 0 : ((c.metal - atual.metal) / atual.metal * 100);
+        return '<tr><td class="font-bold">'+c.nome+'</td><td>'+(c.massa||0).toLocaleString()+' t</td><td>'+(c.teor||0)+'%</td><td>'+Math.round(c.turno||0).toLocaleString()+' t</td><td>'+Math.round(c.metal||0).toLocaleString()+' t</td><td>'+(c.blend||c.teor||0).toFixed?.(1)+'%</td><td>'+(idx===0?'<span class="text-gray-400">-</span>':'<span class="comparison-badge '+(diff>=0?'positive':'negative')+'">'+(diff>=0?'↑':'↓')+' '+Math.abs(diff).toFixed(1)+'%</span>')+'</td></tr>';
+      }).join('');
+    }
+  };
+
+  app.carregarCenario = function(id) {
+    let cenarios = [];
+    try { cenarios = JSON.parse(localStorage.getItem('naza_cenarios_sim') || '[]'); } catch(e){}
+    const c = cenarios.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('sliderMassa').value = c.massa;
+    document.getElementById('sliderTeor').value = c.teor;
+    document.getElementById('sliderHoras').value = c.horas;
+    document.getElementById('sliderRecuperacao').value = c.rec;
+    document.getElementById('sliderTerceira').value = c.terceira;
+    document.getElementById('toggleUsina').checked = c.usina === 'Usina 3';
+    app.updateSimulacaoEnhanced();
+    if (app.showToast) app.showToast('Cenário carregado!');
+  };
+
+  app.excluirCenario = function(id) {
+    let cenarios = [];
+    try { cenarios = JSON.parse(localStorage.getItem('naza_cenarios_sim') || '[]'); } catch(e){}
+    cenarios = cenarios.filter(c => c.id !== id);
+    localStorage.setItem('naza_cenarios_sim', JSON.stringify(cenarios));
+    app.renderCenariosSalvos();
+  };
+
+  app.aplicarSimulacaoEnhanced = function() {
+    app.updateSimulacaoEnhanced();
+    // Sync values to original simulation fields
+    if (app.runSimulation) { try { app.runSimulation(); } catch(e){} }
+    if (app.saveData) app.saveData();
+
+    // Save to Firestore
+    app.syncSimulacaoToFirebase();
+    if (app.showToast) app.showToast('Simulação aplicada!');
+  };
+
+  app.resetarSimulacaoEnhanced = function() {
+    document.getElementById('sliderMassa').value = 1800;
+    document.getElementById('sliderTeor').value = 41.3;
+    document.getElementById('sliderHoras').value = 12;
+    document.getElementById('sliderRecuperacao').value = 96;
+    document.getElementById('sliderTerceira').value = 0;
+    document.getElementById('toggleUsina').checked = false;
+    app.updateSimulacaoEnhanced();
+  };
+
+  app.exportarCenariosPDF = function() {
+    if (app.exportPDF) { app.exportPDF(); return; }
+    alert('Função de exportação não disponível');
+  };
+
+  // ===== FIREBASE SYNC =====
+  app.updateFirebaseStatus = function() {
+    const el = document.getElementById('firebaseSyncStatus');
+    if (!el) return;
+    if (navigator.onLine) {
+      el.className = 'firebase-status';
+      el.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span><span>Sincronizado</span>';
+    } else {
+      el.className = 'firebase-status offline';
+      el.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span><span>Offline (dados locais)</span>';
+    }
+  };
+
+  app.syncSimulacaoToFirebase = function() {
+    if (!window.db || !navigator.onLine) return;
+    const dados = {
+      timestamp: new Date(),
+      parametros: {
+        massaHora: parseFloat(document.getElementById('sliderMassa')?.value || 1800),
+        teorMedio: parseFloat(document.getElementById('sliderTeor')?.value || 41.3),
+        horasTurno: parseFloat(document.getElementById('sliderHoras')?.value || 12),
+        recuperacao: parseFloat(document.getElementById('sliderRecuperacao')?.value || 96),
+        terceiraUsina: parseFloat(document.getElementById('sliderTerceira')?.value || 0),
+        usinaAlvo: document.getElementById('toggleUsina')?.checked ? 'Usina 3' : 'Usina 2'
+      },
+      resultados: {
+        massaTurno: document.getElementById('previewTurno')?.textContent || '0',
+        massaDia: document.getElementById('previewDia')?.textContent || '0',
+        metalTurno: document.getElementById('previewMetalTurno')?.textContent || '0',
+        blendPrevisto: document.getElementById('previewBlend')?.textContent || '0'
+      },
+      usuario: (window.auth && auth.currentUser) ? auth.currentUser.email : 'anonimo',
+      deviceId: localStorage.getItem('naza_device_id') || 'unknown'
+    };
+    db.collection('simulacoes').add(dados)
+      .then(() => console.log('Simulação salva no Firebase'))
+      .catch(e => console.warn('Firebase sync error:', e));
+  };
+
+  // Save all operational data to Firestore
+  app.syncAllDataToFirebase = function() {
+    if (!window.db || !navigator.onLine || !app.data) return;
+    const uid = (window.auth && auth.currentUser) ? auth.currentUser.uid : 'anonimo';
+    const docRef = db.collection('dados_operacionais').doc(uid);
+    const payload = {
+      frentes: app.data.frentes || [],
+      retomadas: app.data.retomadas || [],
+      reconciliacao: app.data.reconciliacao || {},
+      simulacao: app.data.simulacao || {},
+      config: app.data.config || {},
+      lastModified: new Date(),
+      deviceId: localStorage.getItem('naza_device_id') || 'unknown'
+    };
+    docRef.set(payload, {merge: true})
+      .then(() => console.log('Dados operacionais sincronizados'))
+      .catch(e => console.warn('Firebase data sync error:', e));
+  };
+
+  // Hook into existing saveData to auto-sync
+  const origSaveData = app.saveData;
+  app.saveData = function() {
+    origSaveData.call(this);
+    // Debounced Firebase sync
+    clearTimeout(app._fbSyncTimer);
+    app._fbSyncTimer = setTimeout(() => app.syncAllDataToFirebase(), 8000);
+  };
+
+  // Online/offline listeners
+  window.addEventListener('online', () => {
+    app.updateFirebaseStatus();
+    // Sync pending data when back online
+    setTimeout(() => app.syncAllDataToFirebase(), 2000);
+  });
+  window.addEventListener('offline', () => app.updateFirebaseStatus());
+
+  // ===== INIT =====
+  setTimeout(() => {
+    try { app.initEnhancedGauges(); } catch(e){ console.warn('Gauge init:', e); }
+    try { app.initProjecaoChart(); } catch(e){ console.warn('Chart init:', e); }
+    try { app.renderCenariosSalvos(); } catch(e){}
+    try { app.updateSimulacaoEnhanced(); } catch(e){}
+    // Auto-sync every 60s
+    setInterval(() => {
+      if (navigator.onLine && window.db) app.syncAllDataToFirebase();
+    }, 60000);
+  }, 1500);
 })();
 </script>
 
