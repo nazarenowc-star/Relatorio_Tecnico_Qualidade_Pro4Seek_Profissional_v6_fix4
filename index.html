@@ -774,6 +774,7 @@
       // Start cloud sync
       if (window.cloudSync) cloudSync.startSync(user.uid);
     } else {
+      if (window.cloudSync) cloudSync.stopSync();
       screen.classList.remove('hidden');
       if (userBar) userBar.style.display = 'none';
     }
@@ -844,7 +845,8 @@
     <span class="sync-indicator" id="syncIndicator"><span class="dot offline" id="syncDot"></span><span id="syncLabel">Offline</span></span>
   </div>
   <div style="display:flex;gap:8px;align-items:center">
-    <button onclick="cloudSync.forcePush()" class="btn-primary" style="padding:6px 12px;font-size:0.75rem;border-radius:8px">SINCRONIZAR</button>
+    <button onclick="cloudSync.forcePush()" class="btn-primary" style="padding:6px 12px;font-size:0.75rem;border-radius:8px" title="Enviar dados locais para a nuvem">ENVIAR NUVEM</button>
+    <button onclick="cloudSync.forcePull()" style="background:#2563eb;color:white;border:none;padding:6px 12px;border-radius:8px;font-weight:700;font-size:0.75rem;cursor:pointer" title="Baixar última versão da nuvem (outros aparelhos)">BAIXAR NUVEM</button>
     <button onclick="cloudSync.clearCloud()" style="background:#FF8800;color:white;border:none;padding:6px 12px;border-radius:8px;font-weight:700;font-size:0.75rem;cursor:pointer">LIMPAR NUVEM</button>
     <button onclick="authManager.logout()" class="btn-logout" style="background:#FF4444;color:white;border:none;padding:6px 12px;border-radius:8px;font-weight:700;font-size:0.75rem;cursor:pointer">SAIR</button>
   </div>
@@ -2767,11 +2769,86 @@ const app = new NazaFieldPro();
     this.runSimulation();
   };
 
+  /** Escreve valores atuais de app.data.frentes nas linhas da planilha (minério/estéril), para a aba PLANILHAS acompanhar a aba FRENTES e o relatório. */
+  app.syncOperationalFrentesToSheetClones = function(){
+    const order = this.data.sheetOrder || [];
+    const sheets = this.data.sheetClones || {};
+    let changed = false;
+    order.forEach((sheetName) => {
+      if (!/^minerio|^minério|^esteril|^est[eé]ril/i.test(sheetName)) return;
+      const rows = sheets[sheetName];
+      if (!rows || !rows.length) return;
+      const headerIdx = this.findHeaderRow(rows);
+      const headers = rows[headerIdx] || [];
+      const codeIdx = this.getColumnIndex(headers, ['codigo frente', 'codigo', 'frente'], 0);
+      const destIdx = this.getColumnIndex(headers, ['destino'], 1);
+      const planIdx = this.getColumnIndex(headers, ['planejado t', 'planejado'], 2);
+      const realIdx = this.getColumnIndex(headers, ['realizado t', 'realizado'], 3);
+      const tipoIdx = this.getColumnIndex(headers, ['tipo'], 4);
+      const usinaIdx = this.getColumnIndex(headers, ['usina'], 5);
+      const iaIdx = this.getColumnIndex(headers, ['ia'], 6);
+      const icIdx = this.getColumnIndex(headers, ['ic'], 7);
+      const feIdx = this.getColumnIndex(headers, ['fe', 'teor fe'], -1);
+      const pcIdx = this.getColumnIndex(headers, ['pc'], -1);
+      const ppcIdx = this.getColumnIndex(headers, ['ppc'], -1);
+      const obsIdx = this.getColumnIndex(headers, ['obs', 'observacao', 'observação'], -1);
+
+      const frentesForSheet = (this.data.frentes || []).filter(f => f.sheetName === sheetName);
+      if (!frentesForSheet.length) return;
+
+      const idxs = [codeIdx, destIdx, planIdx, realIdx, tipoIdx, usinaIdx, iaIdx, icIdx, feIdx, pcIdx, ppcIdx, obsIdx].filter(i => i >= 0);
+      const maxCol = idxs.length ? idxs.reduce((a, b) => Math.max(a, b), 0) : 7;
+
+      frentesForSheet.forEach((f) => {
+        let rIdx = -1;
+        if (f.rowIndex != null && Number.isFinite(Number(f.rowIndex))) {
+          rIdx = Number(f.rowIndex) - 1;
+        }
+        if (rIdx < 0 || rIdx >= rows.length) {
+          const fc = String(f.codigo || '').trim();
+          const fd = String(f.destino || '').trim();
+          for (let i = headerIdx + 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row) continue;
+            const c = String(row[codeIdx] || '').trim();
+            const d = String(row[destIdx] || '').trim();
+            if (c === fc && d === fd) {
+              rIdx = i;
+              break;
+            }
+          }
+        }
+        if (rIdx < 0 || rIdx >= rows.length) return;
+        while (rows.length <= rIdx) rows.push([]);
+        let row = rows[rIdx];
+        if (!Array.isArray(row)) row = [];
+        while (row.length <= maxCol) row.push('');
+        const prev = JSON.stringify(row);
+        if (planIdx >= 0) row[planIdx] = f.planejado != null && f.planejado !== '' ? Number(f.planejado) : '';
+        if (realIdx >= 0) row[realIdx] = f.realizado != null && f.realizado !== '' ? Number(f.realizado) : '';
+        if (tipoIdx >= 0 && f.tipo) row[tipoIdx] = f.tipo;
+        if (usinaIdx >= 0 && f.usina != null && f.usina !== '') row[usinaIdx] = f.usina;
+        if (iaIdx >= 0) row[iaIdx] = this.percentMetric(this.computeIA(f));
+        if (icIdx >= 0) row[icIdx] = this.percentMetric(this.computeIC(f));
+        if (feIdx >= 0 && f.fe != null && f.fe !== '') row[feIdx] = Number(f.fe);
+        if (pcIdx >= 0 && f.pc != null && f.pc !== '') row[pcIdx] = Number(f.pc);
+        if (ppcIdx >= 0 && f.ppc != null && f.ppc !== '') row[ppcIdx] = Number(f.ppc);
+        if (obsIdx >= 0 && f.obs != null) row[obsIdx] = String(f.obs);
+        rows[rIdx] = row;
+        if (JSON.stringify(row) !== prev) changed = true;
+      });
+      this.data.sheetClones[sheetName] = rows;
+    });
+    return changed;
+  };
+
   app.renderSheetWorkspace = function(){
     this.ensureEnhancedScaffold();
     const tabs = document.getElementById('sheetTabs');
     const wrap = document.getElementById('sheetWorkspace');
     if (!tabs || !wrap) return;
+    const synced = this.syncOperationalFrentesToSheetClones();
+    if (synced) this.saveData();
     const order = this.data.sheetOrder || [];
     const sheets = this.data.sheetClones || {};
     if (!order.length) {
@@ -2782,9 +2859,10 @@ const app = new NazaFieldPro();
     if (!this.data.sheetActive || !sheets[this.data.sheetActive]) this.data.sheetActive = order[0];
     tabs.innerHTML = order.map(name=>`<button class="sheet-tab-btn ${name===this.data.sheetActive?'active':''}" onclick="app.setActiveSheet('${String(name).replace(/'/g,"\\'")}')">${name}</button>`).join('');
     const rows = sheets[this.data.sheetActive] || [['']];
+    const headerIdx = this.findHeaderRow(rows);
     const maxCols = Math.max(...rows.map(r=>r.length), 1);
-    const header = rows[0] || Array.from({length:maxCols}, ()=> '');
-    const bodyRows = rows.slice(1);
+    const header = rows[headerIdx] || rows[0] || Array.from({length:maxCols}, ()=> '');
+    const bodyRows = rows.slice(headerIdx + 1);
     const colLetters = Array.from({length:maxCols}, (_,i)=>{
       let n=i, s='';
       do { s=String.fromCharCode(65 + (n % 26)) + s; n=Math.floor(n/26)-1; } while(n>=0);
@@ -2802,8 +2880,8 @@ const app = new NazaFieldPro();
             <tr>${colLetters.map((c,i)=>`<th>${header[i] || c}</th>`).join('')}</tr>
           </thead>
           <tbody>
-            ${bodyRows.map((row,rIdx)=>`<tr>${Array.from({length:maxCols}, (_,cIdx)=>`<td><input value="${String(row[cIdx] ?? '').replace(/"/g,'&quot;')}" onchange="app.updateSheetCell('${String(this.data.sheetActive).replace(/'/g,"\\'")}', ${rIdx+1}, ${cIdx}, this.value)"></td>`).join('')}</tr>`).join('')}
-            <tr>${Array.from({length:maxCols}, (_,cIdx)=>`<td><input placeholder="Nova linha" onchange="app.updateSheetCell('${String(this.data.sheetActive).replace(/'/g,"\\'")}', ${bodyRows.length+1}, ${cIdx}, this.value)"></td>`).join('')}</tr>
+            ${bodyRows.map((row,rIdx)=>`<tr>${Array.from({length:maxCols}, (_,cIdx)=>`<td><input value="${String(row[cIdx] ?? '').replace(/"/g,'&quot;')}" onchange="app.updateSheetCell('${String(this.data.sheetActive).replace(/'/g,"\\'")}', ${headerIdx + 1 + rIdx}, ${cIdx}, this.value)"></td>`).join('')}</tr>`).join('')}
+            <tr>${Array.from({length:maxCols}, (_,cIdx)=>`<td><input placeholder="Nova linha" onchange="app.updateSheetCell('${String(this.data.sheetActive).replace(/'/g,"\\'")}', ${headerIdx + 1 + bodyRows.length}, ${cIdx}, this.value)"></td>`).join('')}</tr>
           </tbody>
         </table>
       </div>`;
@@ -4734,10 +4812,12 @@ const app = new NazaFieldPro();
 (function(){
   let userId = null;
   let syncTimer = null;
-  let lastSyncTime = 0;
+  let snapshotUnsub = null;
+  let onlineHandler = null;
+  let offlineHandler = null;
+  let lastAppliedCloudSync = 0;
+  let applyingRemote = false;
   const SYNC_INTERVAL = 30000; // 30s
-  const DEBOUNCE = 3000;
-  let pendingSync = false;
 
   function updateSyncUI(status) {
     const dot = document.getElementById('syncDot');
@@ -4748,26 +4828,94 @@ const app = new NazaFieldPro();
     label.textContent = labels[status] || status;
   }
 
+  function shouldApplyCloud(cloudData, localData, opts) {
+    if (!cloudData || !cloudData.lastSync) return false;
+    if (opts && opts.force) return true;
+    if (cloudData.lastSync <= lastAppliedCloudSync) return false;
+    if (localData && localData.lastModified && cloudData.lastSync < localData.lastModified) return false;
+    return true;
+  }
+
+  async function applyCloudPayload(cloudData, localData) {
+    const merged = JSON.parse(JSON.stringify(cloudData));
+    if (localData && localData.frentes && merged.frentes) {
+      merged.frentes = merged.frentes.map(cf => {
+        const local = localData.frentes.find(lf => lf.codigo === cf.codigo && lf.destino === cf.destino);
+        if (local && local.fotos && local.fotos.length > 0) cf.fotos = local.fotos;
+        return cf;
+      });
+    }
+    lastAppliedCloudSync = cloudData.lastSync;
+    applyingRemote = true;
+    try {
+      await idbStore.set('naza_app_data', merged);
+      if (window.app) {
+        app.data = { ...app.data, ...merged };
+        app.updateUI();
+      }
+      console.log('☁️ Dados da nuvem aplicados (sync v2)');
+    } finally {
+      applyingRemote = false;
+    }
+  }
+
   window.cloudSync = {
+    get applyingRemote() { return applyingRemote; },
+
+    stopSync() {
+      if (snapshotUnsub) {
+        try { snapshotUnsub(); } catch (e) {}
+        snapshotUnsub = null;
+      }
+      clearInterval(syncTimer);
+      syncTimer = null;
+      if (onlineHandler) window.removeEventListener('online', onlineHandler);
+      if (offlineHandler) window.removeEventListener('offline', offlineHandler);
+      onlineHandler = null;
+      offlineHandler = null;
+      userId = null;
+      lastAppliedCloudSync = 0;
+    },
+
     startSync(uid) {
+      this.stopSync();
       userId = uid;
       updateSyncUI(navigator.onLine ? 'online' : 'offline');
-      
-      // Pull from cloud first
-      this.pullFromCloud();
-      
-      // Auto sync interval
+
+      this.pullFromCloud({ initial: true }).then(() => {
+        this.attachRealtimeListener();
+      }).catch(() => this.attachRealtimeListener());
+
       clearInterval(syncTimer);
       syncTimer = setInterval(() => {
         if (navigator.onLine && userId) this.pushToCloud();
       }, SYNC_INTERVAL);
 
-      // Sync on connectivity change
-      window.addEventListener('online', () => {
+      onlineHandler = () => {
         updateSyncUI('online');
         setTimeout(() => this.pushToCloud(), 2000);
-      });
-      window.addEventListener('offline', () => updateSyncUI('offline'));
+      };
+      offlineHandler = () => updateSyncUI('offline');
+      window.addEventListener('online', onlineHandler);
+      window.addEventListener('offline', offlineHandler);
+    },
+
+    attachRealtimeListener() {
+      if (!userId || snapshotUnsub) return;
+      const ref = db.collection('users').doc(userId).collection('reports').doc('current');
+      snapshotUnsub = ref.onSnapshot(
+        (snap) => {
+          if (!snap.exists || !navigator.onLine) return;
+          const cloudData = snap.data();
+          if (!cloudData || !cloudData.lastSync) return;
+          idbStore.get('naza_app_data').then((localData) => {
+            if (!shouldApplyCloud(cloudData, localData, {})) return;
+            applyCloudPayload(cloudData, localData).catch((e) => console.error('Apply remote:', e));
+          });
+        },
+        (err) => console.error('Firestore snapshot:', err)
+      );
+      console.log('☁️ Listener em tempo real ativo (outros aparelhos atualizam automaticamente)');
     },
 
     async pushToCloud() {
@@ -4776,22 +4924,28 @@ const app = new NazaFieldPro();
         updateSyncUI('syncing');
         const data = await idbStore.get('naza_app_data');
         if (!data) { updateSyncUI('online'); return; }
-        
-        // Remove photos from cloud sync (too large)
+
         const cloudData = JSON.parse(JSON.stringify(data));
         if (cloudData.frentes) {
           cloudData.frentes.forEach(f => {
             if (f.fotos && f.fotos.length > 0) {
               f.fotosCount = f.fotos.length;
-              f.fotos = []; // Don't send photos to cloud
+              f.fotos = [];
             }
           });
         }
-        cloudData.lastSync = Date.now();
+        const ts = Date.now();
+        cloudData.lastSync = ts;
         cloudData.deviceId = this.getDeviceId();
-        
+
         await db.collection('users').doc(userId).collection('reports').doc('current').set(cloudData, { merge: true });
-        lastSyncTime = Date.now();
+        lastAppliedCloudSync = ts;
+        const local = await idbStore.get('naza_app_data');
+        if (local) {
+          local.lastSync = ts;
+          await idbStore.set('naza_app_data', local);
+          if (window.app) app.data.lastSync = ts;
+        }
         updateSyncUI('online');
         console.log('☁️ Dados sincronizados com a nuvem');
       } catch(err) {
@@ -4800,7 +4954,7 @@ const app = new NazaFieldPro();
       }
     },
 
-    async pullFromCloud() {
+    async pullFromCloud(opts) {
       if (!userId || !navigator.onLine) return;
       try {
         updateSyncUI('syncing');
@@ -4808,23 +4962,21 @@ const app = new NazaFieldPro();
         if (doc.exists) {
           const cloudData = doc.data();
           const localData = await idbStore.get('naza_app_data');
-          
-          // Merge: cloud wins for newer data, keep local photos
-          if (!localData || (cloudData.lastSync && (!localData.lastSync || cloudData.lastSync > localData.lastSync))) {
-            // Restore local photos
-            if (localData && localData.frentes) {
-              cloudData.frentes = (cloudData.frentes || []).map(cf => {
-                const local = localData.frentes.find(lf => lf.codigo === cf.codigo && lf.destino === cf.destino);
-                if (local && local.fotos && local.fotos.length > 0) cf.fotos = local.fotos;
-                return cf;
-              });
-            }
-            await idbStore.set('naza_app_data', cloudData);
-            if (window.app) {
-              app.data = { ...app.data, ...cloudData };
-              app.updateUI();
-            }
+          const force = opts && opts.force;
+          const initial = opts && opts.initial;
+          let apply = false;
+          if (force) apply = true;
+          else if (initial && cloudData.lastSync) {
+            const localNewerPending = localData && localData.lastModified && cloudData.lastSync < localData.lastModified;
+            apply = !localNewerPending && (!localData || cloudData.lastSync > (localData.lastSync || 0));
+          } else {
+            apply = shouldApplyCloud(cloudData, localData, {});
+          }
+          if (apply) {
+            await applyCloudPayload(cloudData, localData);
             console.log('☁️ Dados da nuvem carregados');
+          } else if (initial && cloudData.lastSync) {
+            lastAppliedCloudSync = Math.max(lastAppliedCloudSync, cloudData.lastSync);
           }
         }
         updateSyncUI('online');
@@ -4840,7 +4992,19 @@ const app = new NazaFieldPro();
         return;
       }
       await this.pushToCloud();
-      if (window.app) app.showToast('Dados sincronizados com a nuvem!');
+      if (window.app) app.showToast('Dados enviados para a nuvem!');
+    },
+
+    async forcePull() {
+      if (!navigator.onLine) {
+        if (window.app) app.showToast('Sem conexão.', 'error');
+        return;
+      }
+      if (!userId) return;
+      updateSyncUI('syncing');
+      await this.pullFromCloud({ force: true });
+      updateSyncUI('online');
+      if (window.app) app.showToast('Dados baixados da nuvem!');
     },
 
     async clearCloud() {
@@ -4848,6 +5012,7 @@ const app = new NazaFieldPro();
       if (!confirm('Limpar todos os dados da nuvem? Dados locais serão mantidos.')) return;
       try {
         await db.collection('users').doc(userId).collection('reports').doc('current').delete();
+        lastAppliedCloudSync = 0;
         if (window.app) app.showToast('Dados da nuvem limpos!');
       } catch(err) {
         if (window.app) app.showToast('Erro: ' + err.message, 'error');
@@ -4877,7 +5042,7 @@ const app = new NazaFieldPro();
     // Debounced cloud sync
     clearTimeout(this._cloudSyncTimer);
     this._cloudSyncTimer = setTimeout(() => {
-      if (navigator.onLine && window.cloudSync && auth.currentUser) {
+      if (navigator.onLine && window.cloudSync && auth.currentUser && !cloudSync.applyingRemote) {
         cloudSync.pushToCloud();
       }
     }, 5000);
