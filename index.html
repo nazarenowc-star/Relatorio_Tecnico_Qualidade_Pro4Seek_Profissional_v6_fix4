@@ -761,7 +761,22 @@
     }
   };
 
-  // Auth state listener
+  // Auth state listener — cloudSync script loads after firebase-init; defer start até existir
+  function startCloudWhenReady(uid) {
+    const tryStart = () => {
+      if (window.cloudSync && typeof cloudSync.startSync === 'function') {
+        cloudSync.startSync(uid);
+        return true;
+      }
+      return false;
+    };
+    if (tryStart()) return;
+    let n = 0;
+    const t = setInterval(() => {
+      if (tryStart() || ++n > 80) clearInterval(t);
+    }, 50);
+  }
+
   auth.onAuthStateChanged(user => {
     const screen = document.getElementById('authScreen');
     const userBar = document.getElementById('authUserBar');
@@ -771,8 +786,7 @@
         userBar.style.display = 'flex';
         document.getElementById('authUserEmail').textContent = user.email;
       }
-      // Start cloud sync
-      if (window.cloudSync) cloudSync.startSync(user.uid);
+      setTimeout(() => startCloudWhenReady(user.uid), 0);
     } else {
       if (window.cloudSync) cloudSync.stopSync();
       screen.classList.remove('hidden');
@@ -1094,6 +1108,7 @@ class NazaFieldPro {
         if (!confirm(`Excluir ${checkboxes.length} frente(s) selecionada(s)?`)) return;
         const indicesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.dataset.frenteIdx)).sort((a,b)=>b-a);
         indicesToDelete.forEach(i => this.data.frentes.splice(i, 1));
+        if (this.data.frentes.length === 0) this.data._forceEmptyFrentesPush = true;
         this.saveData();
         this.updateUI();
         this.showToast(`${indicesToDelete.length} frente(s) excluída(s)!`);
@@ -1103,6 +1118,7 @@ class NazaFieldPro {
         if (this.data.frentes.length === 0) { this.showToast('Nenhuma frente para excluir', 'error'); return; }
         if (!confirm(`Excluir TODAS as ${this.data.frentes.length} frentes?`)) return;
         this.data.frentes = [];
+        this.data._forceEmptyFrentesPush = true;
         this.saveData();
         this.updateUI();
         this.showToast('Todas as frentes foram excluídas!');
@@ -3488,6 +3504,7 @@ const app = new NazaFieldPro();
 
   app.resetOperationalDataset = function(){
     this.data.frentes = [];
+    this.data._forceEmptyFrentesPush = true;
     this.data.retomadas = [];
     this.data.reconciliacao = deepClone(DEFAULT_RECON);
     this.data.simulacao = Object.assign({}, DEFAULT_SIM);
@@ -4813,11 +4830,39 @@ const app = new NazaFieldPro();
   let userId = null;
   let syncTimer = null;
   let snapshotUnsub = null;
+  let pullTimer = null;
   let onlineHandler = null;
   let offlineHandler = null;
   let lastAppliedCloudSync = 0;
   let applyingRemote = false;
+  let initialHydrationDone = false;
   const SYNC_INTERVAL = 30000; // 30s
+  const PULL_INTERVAL = 120000; // backup: puxar nuvem a cada 2 min (snapshot às vezes falha em rede instável)
+
+  function payloadWeight(d) {
+    if (!d) return 0;
+    let w = 0;
+    w += Array.isArray(d.frentes) ? d.frentes.length : 0;
+    w += Array.isArray(d.retomadas) ? d.retomadas.length : 0;
+    const sk = d.sheetClones && Object.keys(d.sheetClones);
+    if (sk && sk.length) w += sk.length;
+    return w;
+  }
+
+  /**
+   * Firestore .set(merge) substitui o array `frentes` inteiro — lista vazia apaga o que está na nuvem.
+   * Bloqueia SEMPRE que o local estiver “vazio” e a nuvem tiver dados, EXCETO se o usuário acabou de
+   * confirmar exclusão explícita no app (flag _forceEmptyFrentesPush). lastSync não libera mais o vazio.
+   */
+  function localWouldEraseCloud(local, remote) {
+    if (!remote || payloadWeight(remote) === 0) return false;
+    if (local && local._forceEmptyFrentesPush) return false;
+    const lf = local && local.frentes ? local.frentes.length : 0;
+    const rf = remote.frentes ? remote.frentes.length : 0;
+    if (lf === 0 && rf > 0) return true;
+    if (payloadWeight(local) === 0 && payloadWeight(remote) > 0) return true;
+    return false;
+  }
 
   function updateSyncUI(status) {
     const dot = document.getElementById('syncDot');
@@ -4828,16 +4873,29 @@ const app = new NazaFieldPro();
     label.textContent = labels[status] || status;
   }
 
+  function cloudTimestamp(cloudData) {
+    const t = cloudData && (cloudData.lastSync || cloudData.lastModified || cloudData.cloudSavedAt);
+    return typeof t === 'number' && t > 0 ? t : 0;
+  }
+
   function shouldApplyCloud(cloudData, localData, opts) {
-    if (!cloudData || !cloudData.lastSync) return false;
+    if (!cloudData) return false;
+    const ct = cloudTimestamp(cloudData);
     if (opts && opts.force) return true;
-    if (cloudData.lastSync <= lastAppliedCloudSync) return false;
-    if (localData && localData.lastModified && cloudData.lastSync < localData.lastModified) return false;
-    return true;
+    if (ct > 0 && ct <= lastAppliedCloudSync) return false;
+    const lt = Number(localData && (localData.lastSync || localData.cloudSavedAt || 0));
+    if (ct > 0 && lt > 0 && ct < lt) return false;
+    if (localData && localData.lastModified && ct > 0 && ct < localData.lastModified) return false;
+    if (ct > 0) return true;
+    const cf = cloudData.frentes;
+    const lf = localData && localData.frentes;
+    if (Array.isArray(cf) && cf.length && (!lf || !lf.length || lf.length !== cf.length)) return true;
+    return false;
   }
 
   async function applyCloudPayload(cloudData, localData) {
     const merged = JSON.parse(JSON.stringify(cloudData));
+    if (!merged.lastSync) merged.lastSync = Date.now();
     if (localData && localData.frentes && merged.frentes) {
       merged.frentes = merged.frentes.map(cf => {
         const local = localData.frentes.find(lf => lf.codigo === cf.codigo && lf.destino === cf.destino);
@@ -4845,7 +4903,7 @@ const app = new NazaFieldPro();
         return cf;
       });
     }
-    lastAppliedCloudSync = cloudData.lastSync;
+    lastAppliedCloudSync = Math.max(lastAppliedCloudSync, cloudTimestamp(cloudData) || Date.now());
     applyingRemote = true;
     try {
       await idbStore.set('naza_app_data', merged);
@@ -4869,27 +4927,40 @@ const app = new NazaFieldPro();
       }
       clearInterval(syncTimer);
       syncTimer = null;
+      if (pullTimer) { clearInterval(pullTimer); pullTimer = null; }
       if (onlineHandler) window.removeEventListener('online', onlineHandler);
       if (offlineHandler) window.removeEventListener('offline', offlineHandler);
       onlineHandler = null;
       offlineHandler = null;
       userId = null;
       lastAppliedCloudSync = 0;
+      initialHydrationDone = false;
     },
 
     startSync(uid) {
       this.stopSync();
       userId = uid;
+      initialHydrationDone = false;
       updateSyncUI(navigator.onLine ? 'online' : 'offline');
 
-      this.pullFromCloud({ initial: true }).then(() => {
-        this.attachRealtimeListener();
-      }).catch(() => this.attachRealtimeListener());
+      this.pullFromCloud({ initial: true })
+        .then(() => {
+          initialHydrationDone = true;
+          this.attachRealtimeListener();
+        })
+        .catch(() => {
+          initialHydrationDone = true;
+          this.attachRealtimeListener();
+        });
 
       clearInterval(syncTimer);
       syncTimer = setInterval(() => {
         if (navigator.onLine && userId) this.pushToCloud();
       }, SYNC_INTERVAL);
+      if (pullTimer) clearInterval(pullTimer);
+      pullTimer = setInterval(() => {
+        if (navigator.onLine && userId) this.pullFromCloud({});
+      }, PULL_INTERVAL);
 
       onlineHandler = () => {
         updateSyncUI('online');
@@ -4907,7 +4978,7 @@ const app = new NazaFieldPro();
         (snap) => {
           if (!snap.exists || !navigator.onLine) return;
           const cloudData = snap.data();
-          if (!cloudData || !cloudData.lastSync) return;
+          if (!cloudData) return;
           idbStore.get('naza_app_data').then((localData) => {
             if (!shouldApplyCloud(cloudData, localData, {})) return;
             applyCloudPayload(cloudData, localData).catch((e) => console.error('Apply remote:', e));
@@ -4920,12 +4991,30 @@ const app = new NazaFieldPro();
 
     async pushToCloud() {
       if (!userId || !navigator.onLine) return;
+      if (!initialHydrationDone) {
+        console.warn('☁️ Push adiado: aguardando primeiro pull da nuvem');
+        return;
+      }
       try {
         updateSyncUI('syncing');
+        const ref = db.collection('users').doc(userId).collection('reports').doc('current');
+        const remoteSnap = await ref.get();
+        const remote = remoteSnap.exists ? remoteSnap.data() : null;
         const data = await idbStore.get('naza_app_data');
         if (!data) { updateSyncUI('online'); return; }
 
+        if (localWouldEraseCloud(data, remote)) {
+          console.warn('☁️ Push cancelado: nuvem tem dados e o aparelho está vazio — baixando nuvem em vez de apagar.');
+          await applyCloudPayload(remote, data);
+          updateSyncUI('online');
+          if (window.app && typeof app.showToast === 'function') {
+            app.showToast('Dados da nuvem aplicados neste aparelho.');
+          }
+          return;
+        }
+
         const cloudData = JSON.parse(JSON.stringify(data));
+        delete cloudData._forceEmptyFrentesPush;
         if (cloudData.frentes) {
           cloudData.frentes.forEach(f => {
             if (f.fotos && f.fotos.length > 0) {
@@ -4936,15 +5025,22 @@ const app = new NazaFieldPro();
         }
         const ts = Date.now();
         cloudData.lastSync = ts;
+        cloudData.cloudSavedAt = ts;
         cloudData.deviceId = this.getDeviceId();
 
-        await db.collection('users').doc(userId).collection('reports').doc('current').set(cloudData, { merge: true });
+        await ref.set(cloudData, { merge: true });
         lastAppliedCloudSync = ts;
         const local = await idbStore.get('naza_app_data');
         if (local) {
           local.lastSync = ts;
+          local.cloudSavedAt = ts;
+          delete local._forceEmptyFrentesPush;
           await idbStore.set('naza_app_data', local);
-          if (window.app) app.data.lastSync = ts;
+          if (window.app) {
+            app.data.lastSync = ts;
+            app.data.cloudSavedAt = ts;
+            delete app.data._forceEmptyFrentesPush;
+          }
         }
         updateSyncUI('online');
         console.log('☁️ Dados sincronizados com a nuvem');
@@ -4966,17 +5062,26 @@ const app = new NazaFieldPro();
           const initial = opts && opts.initial;
           let apply = false;
           if (force) apply = true;
-          else if (initial && cloudData.lastSync) {
-            const localNewerPending = localData && localData.lastModified && cloudData.lastSync < localData.lastModified;
-            apply = !localNewerPending && (!localData || cloudData.lastSync > (localData.lastSync || 0));
+          else if (initial) {
+            const cts = cloudTimestamp(cloudData);
+            const localNewerPending = localData && localData.lastModified && cts > 0 && cts < localData.lastModified;
+            const localLs = Number(localData && (localData.lastSync || localData.cloudSavedAt || 0));
+            const cloudHasF = Array.isArray(cloudData.frentes) && cloudData.frentes.length > 0;
+            const localHasF = localData && Array.isArray(localData.frentes) && localData.frentes.length > 0;
+            apply = !localNewerPending && (
+              !localData ||
+              cts > localLs ||
+              (!localHasF && cloudHasF) ||
+              (cts === 0 && cloudHasF && (!localHasF || cloudData.frentes.length !== localData.frentes.length))
+            );
           } else {
             apply = shouldApplyCloud(cloudData, localData, {});
           }
           if (apply) {
             await applyCloudPayload(cloudData, localData);
             console.log('☁️ Dados da nuvem carregados');
-          } else if (initial && cloudData.lastSync) {
-            lastAppliedCloudSync = Math.max(lastAppliedCloudSync, cloudData.lastSync);
+          } else if (initial && cloudTimestamp(cloudData) > 0) {
+            lastAppliedCloudSync = Math.max(lastAppliedCloudSync, cloudTimestamp(cloudData));
           }
         }
         updateSyncUI('online');
@@ -5065,13 +5170,18 @@ const app = new NazaFieldPro();
     }
   };
 
-  // Async load from IDB on startup
+  // Async load from IDB — não sobrescrever se a nuvem já aplicou dados mais recentes na memória
   idbStore.get('naza_app_data').then(data => {
-    if (data) {
-      app.data = { ...app.data, ...data };
-      app.updateUI();
-      console.log('Dados carregados do IndexedDB');
+    if (!data) return;
+    const memSync = Number(app.data.lastSync || app.data.cloudSavedAt || 0);
+    const incSync = Number(data.lastSync || data.cloudSavedAt || 0);
+    if (memSync > incSync) {
+      console.log('IDB: carga ignorada (memória já tem versão mais recente que o snapshot local)');
+      return;
     }
+    app.data = { ...app.data, ...data };
+    app.updateUI();
+    console.log('Dados carregados do IndexedDB');
   }).catch(err => console.error('IDB load error:', err));
 
   // ========== FIX: Destination bug ==========
