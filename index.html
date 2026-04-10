@@ -2214,7 +2214,8 @@ const app = new NazaFieldPro();
         this.destroyReportCharts();
 
         frontSections.forEach((section, idx) => {
-            const canvas = document.getElementById(`chart-front-${idx + 2}`);
+            // capa=1, técnico=2, frentes começam na página 3
+            const canvas = document.getElementById(`chart-front-${idx + 3}`);
             if (!canvas) return;
             const labels = section.items.map(item => this.shortLabel(item.codigo));
             this.reportCharts.push(new Chart(canvas, {
@@ -2314,7 +2315,8 @@ const app = new NazaFieldPro();
         });
 
         retomadaSections.forEach((section, idx) => {
-            const pageNo = frontSections.length + 4 + idx;
+            // capa=1, técnico=2, frentes=3..(3+frontLen-1), recon=+(frontLen)2 páginas, retomadas começam em (frontLen+5)
+            const pageNo = frontSections.length + 5 + idx;
             const main = document.getElementById(`chart-ret-${pageNo}-main`);
             const mix = document.getElementById(`chart-ret-${pageNo}-mix`);
             if (main) {
@@ -4584,6 +4586,39 @@ const app = new NazaFieldPro();
         </section>`);
     });
 
+    // Página final de apoio: Reconciliação (inclui observações de campo + gráfico consolidado)
+    try {
+      const u2 = this.data?.reconciliacao?.u2 || {};
+      const u3 = this.data?.reconciliacao?.u3 || {};
+      const obsU2 = String(u2.obs || '').trim();
+      const obsU3 = String(u3.obs || '').trim();
+      const hasObs = !!(obsU2 || obsU3);
+      const hasNums = ['fe','pc','ppc','rom'].some(k => (u2?.[k]?.plan || u2?.[k]?.real || u3?.[k]?.plan || u3?.[k]?.real));
+      if (hasObs || hasNums) {
+        reportBook.insertAdjacentHTML('beforeend', `
+          <section class="report-page">
+            <div class="rp-header"><div>RECONCILIAÇÃO – REGISTRO DE CAMPO</div><div class="brand">SAMARCO</div></div>
+            <div class="rp-body">
+              <div class="report-metrics">
+                <div class="report-metric-mini">
+                  <table>
+                    <tr><th>Usina 2 (obs)</th><td>${this.escapeHtml(obsU2 || '-')}</td></tr>
+                    <tr><th>Usina 3 (obs)</th><td>${this.escapeHtml(obsU3 || '-')}</td></tr>
+                  </table>
+                  <div class="metric-mini-note">As observações e teores da Reconciliação são salvos localmente e sincronizados quando houver internet, refletindo em simulação e no relatório.</div>
+                </div>
+                <div class="chart-panel">
+                  <div class="chart-title">Consolidado (Fe / Pc / PPC)</div>
+                  <div class="chart-wrap" style="height:210px"><canvas id="chart-recon-apoio-report"></canvas></div>
+                </div>
+              </div>
+            </div>
+            <div class="rp-page-no">${nextPageNo++}</div>
+          </section>
+        `);
+      }
+    } catch(e) {}
+
     const ds = this.getSimulationDataset();
     if (!(ds.turnoMass > 0 || ds.mixFe > 0)) return;
 
@@ -4641,6 +4676,29 @@ const app = new NazaFieldPro();
 
     setTimeout(() => {
       try {
+        // Reconciliação apoio
+        const cr = document.getElementById('chart-recon-apoio-report');
+        if (cr && window.Chart) {
+          this.destroyChartOnCanvas(cr);
+          const u2 = this.data?.reconciliacao?.u2 || {};
+          const u3 = this.data?.reconciliacao?.u3 || {};
+          const val = (obj, key) => Number(obj?.[key]?.real ?? obj?.[key]?.plan ?? 0) || 0;
+          this.reportCharts.push(new Chart(cr, {
+            type:'bar',
+            data:{
+              labels:['Fe','Pc','PPC'],
+              datasets:[
+                {label:'Usina 2', data:[val(u2,'fe'), val(u2,'pc'), val(u2,'ppc')], backgroundColor:'#0b5fa5'},
+                {label:'Usina 3', data:[val(u3,'fe'), val(u3,'pc'), val(u3,'ppc')], backgroundColor:'#22c55e'}
+              ]
+            },
+            options:{responsive:true, maintainAspectRatio:false, animation:false,
+              plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}}},
+              scales:{y:{beginAtZero:true, ticks:{font:{size:9}}}, x:{ticks:{font:{size:9}}}}
+            }
+          }));
+        }
+
         const labels = [...ds.hourly.map(h => h.label), 'Dia'];
         const massSeries = [...ds.hourly.map(h => +((h.massa)||0).toFixed(0)), +((ds.dayMass)||0).toFixed(0)];
         const feSeries = [...ds.hourly.map(h => +((h.fe)||0).toFixed(2)), +((ds.mixFe)||0).toFixed(2)];
