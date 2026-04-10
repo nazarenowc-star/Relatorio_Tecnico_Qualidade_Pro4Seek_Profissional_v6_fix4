@@ -1003,6 +1003,28 @@ class NazaFieldPro {
         this.setupAutoSave();
         document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
         this.setupSpeechRecognition();
+        this.setupReconObservacoes();
+    }
+
+    setupReconObservacoes() {
+        const bind = (textareaId, usinaKey) => {
+            const el = document.getElementById(textareaId);
+            if (!el) return;
+            if (!this.data.reconciliacao) this.data.reconciliacao = {};
+            if (!this.data.reconciliacao[usinaKey]) this.data.reconciliacao[usinaKey] = {};
+            el.value = this.data.reconciliacao[usinaKey].obs || '';
+            let t = null;
+            el.addEventListener('input', () => {
+                clearTimeout(t);
+                t = setTimeout(() => {
+                    if (!this.data.reconciliacao[usinaKey]) this.data.reconciliacao[usinaKey] = {};
+                    this.data.reconciliacao[usinaKey].obs = (el.value || '').trim();
+                    this.saveData();
+                }, 250);
+            });
+        };
+        bind('u2_obs', 'u2');
+        bind('u3_obs', 'u3');
     }
 
     setupSpeechRecognition() {
@@ -1135,7 +1157,64 @@ class NazaFieldPro {
     verFoto(data) { document.getElementById('fotoAmpliada').src = data; this.showModal('modalFoto'); }
     fecharModalFoto() { this.closeModal('modalFoto'); }
     removerFoto(idx) { this.tempFotos.splice(idx, 1); this.atualizarPreviewFotos(); }
-    saveFrente() { const codigo = document.getElementById('frenteCodigo').value.trim().toUpperCase(); const planejado = parseFloat(document.getElementById('frentePlan').value) || 0; const realizado = parseFloat(document.getElementById('frenteReal').value) || 0; const destino = document.getElementById('frenteDestino').value; const status = document.getElementById('frenteStatus').value; const obs = document.getElementById('frenteObs').value.trim(); if (!codigo) { this.showToast('Digite o código da frente!', 'error'); return; } const frente = { codigo, planejado, realizado, destino, status, obs, fotos: this.tempFotos, data: new Date().toISOString() }; if (this.currentFrenteIndex !== null) this.data.frentes[this.currentFrenteIndex] = frente; else this.data.frentes.push(frente); this.saveData(); this.updateUI(); this.closeModalFrente(); this.showToast(this.currentFrenteIndex !== null ? 'Frente atualizada!' : 'Frente adicionada!'); }
+    saveFrente() {
+        const codigo = document.getElementById('frenteCodigo').value.trim().toUpperCase();
+        const planejado = parseFloat(document.getElementById('frentePlan').value) || 0;
+        const realizado = parseFloat(document.getElementById('frenteReal').value) || 0;
+        const destino = document.getElementById('frenteDestino').value;
+        const status = document.getElementById('frenteStatus').value;
+        const obs = document.getElementById('frenteObs').value.trim();
+        if (!codigo) { this.showToast('Digite o código da frente!', 'error'); return; }
+
+        const base = {
+          codigo,
+          planejado,
+          realizado,
+          destino,
+          status,
+          obs,
+          fotos: this.tempFotos,
+          data: new Date().toISOString()
+        };
+
+        if (this.currentFrenteIndex !== null) {
+          const existing = this.data.frentes[this.currentFrenteIndex] || {};
+          const existingDestino = String(existing.destino || '').trim();
+          const newDestino = String(destino || '').trim();
+
+          // Se o destino mudou, vira UMA NOVA FRENTE (auditoria/relatório/planilhas).
+          if (existingDestino && newDestino && existingDestino !== newDestino) {
+            const nova = {
+              ...existing,
+              ...base,
+              criadaNova: true,
+              // mantém referência de planilha/relatório quando existir
+              sheetName: existing.sheetName || base.sheetName,
+              sectionKey: existing.sectionKey || base.sectionKey,
+              sectionTitle: existing.sectionTitle || base.sectionTitle,
+              sourceOrder: existing.sourceOrder,
+              // força criar/achar linha por (codigo+destino) em vez de reutilizar rowIndex antigo
+              rowIndex: null
+            };
+            this.data.frentes.push(nova);
+            this.saveData();
+            this.updateUI();
+            this.closeModalFrente();
+            this.showToast('Destino alterado: criada nova frente (mantida a anterior).');
+            return;
+          }
+
+          // Destino igual: atualiza a frente existente.
+          this.data.frentes[this.currentFrenteIndex] = { ...existing, ...base, criadaNova: existing.criadaNova || false };
+        } else {
+          this.data.frentes.push(base);
+        }
+
+        this.saveData();
+        this.updateUI();
+        this.closeModalFrente();
+        this.showToast(this.currentFrenteIndex !== null ? 'Frente atualizada!' : 'Frente adicionada!');
+    }
     closeModalFrente() { this.closeModal('modalFrente'); this.currentFrenteIndex = null; this.tempFotos = []; }
     switchTab(tab) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -1369,7 +1448,12 @@ class NazaFieldPro {
         const textarea = document.getElementById(targetId);
         if (btn.classList.contains('recording')) { this.recognition.stop(); return; }
         btn.classList.add('recording'); btn.querySelector('span').textContent = 'GRAVANDO... (CLIQUE PARA PARAR)';
-        this.recognition.onresult = (event) => { const transcript = event.results[0][0].transcript; const currentText = textarea.value; textarea.value = currentText ? currentText + ' ' + transcript : transcript; };
+        this.recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          const currentText = textarea.value;
+          textarea.value = currentText ? currentText + ' ' + transcript : transcript;
+          textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        };
         this.recognition.onerror = (event) => { this.showToast('Erro no reconhecimento: ' + event.error, 'error'); btn.classList.remove('recording'); btn.querySelector('span').textContent = 'FALAR OBSERVAÇÕES'; };
         this.recognition.onend = () => { btn.classList.remove('recording'); btn.querySelector('span').textContent = 'FALAR OBSERVAÇÕES'; };
         this.recognition.start();
@@ -1539,6 +1623,15 @@ const app = new NazaFieldPro();
 
     app.safeClone = function(obj) {
         return JSON.parse(JSON.stringify(obj));
+    };
+
+    app.escapeHtml = function(str) {
+        return String(str || '').replace(/[&<>"']/g, (m) => (
+          m === '&' ? '&amp;' :
+          m === '<' ? '&lt;' :
+          m === '>' ? '&gt;' :
+          m === '"' ? '&quot;' : '&#39;'
+        ));
     };
 
     app.loadReconciliationFieldsToScreen = function() {
@@ -1926,6 +2019,7 @@ const app = new NazaFieldPro();
     app.renderReconPage = function(target, pageNo) {
         const title = target === 'u2' ? 'RECONCILIAÇÃO – USINA 2' : 'RECONCILIAÇÃO – USINA 3';
         const data = this.data.reconciliacao[target] || {};
+        const obs = (typeof data.obs === 'string' ? data.obs.trim() : '');
         const rows = ['rom', 'fe', 'ppc', 'pc', 'ppcc'].map(key => {
             const item = data[key] || { plan: 0, real: 0, unit: '' };
             return {
@@ -1969,6 +2063,7 @@ const app = new NazaFieldPro();
                         <div class="recon-kpi"><div class="rk-title">Pc</div><div class="chart-wrap" style="height:140px"><canvas id="chart-${target}-pc"></canvas></div></div>
                         <div class="recon-kpi"><div class="rk-title">Desvio (%)</div><div class="chart-wrap" style="height:190px"><canvas id="chart-${target}-deviation"></canvas></div></div>
                     </div>
+                    ${obs ? `<div class="report-obs-box"><strong>Observações (campo)</strong><div style="margin-top:6px;white-space:pre-wrap">${this.escapeHtml ? this.escapeHtml(obs) : obs}</div></div>` : ''}
                 </div>
                 <div class="rp-page-no">${pageNo}</div>
             </section>
@@ -2036,17 +2131,79 @@ const app = new NazaFieldPro();
 
     app.renderTechPage = function(pageNo) {
         const tecnico = this.data.config.tecnico || 'Técnico de Qualidade';
+        const turno = (this.data.config.turno || '-').toUpperCase();
+        const dataRel = document.getElementById('reportDate').value || '-';
         return `
             <section class="report-page tech-page">
-                <div class="tech-inner">
-                    <h2>Técnico de Qualidade</h2>
-                    <div class="underline"></div>
-                    <div class="tech-data">
-                        <div>Nome: ${tecnico}</div>
-                        <div>Turno: ${(this.data.config.turno || '-').toUpperCase()}</div>
-                        <div>Data: ${document.getElementById('reportDate').value || '-'}</div>
+                <div class="tech-inner" style="
+                    position:relative;
+                    min-height:100%;
+                    background:linear-gradient(180deg,#0f4f7f 0%, #0c4a74 100%);
+                    color:#fff;
+                    overflow:hidden;
+                    padding:34px 32px 24px 32px;
+                ">
+                    <h2 style="
+                        font-size:30px;
+                        font-weight:900;
+                        text-transform:uppercase;
+                        letter-spacing:.5px;
+                        margin:0 0 8px 0;
+                    ">Técnico de Qualidade</h2>
+
+                    <div style="
+                        width:220px;
+                        height:2px;
+                        background:rgba(255,255,255,.75);
+                        margin-bottom:34px;
+                    "></div>
+
+                    <div style="
+                        position:relative;
+                        z-index:2;
+                        font-size:18px;
+                        font-weight:700;
+                        line-height:1.85;
+                        margin-top:18px;
+                    ">
+                        <div><strong>Nome:</strong> ${this.escapeHtml(tecnico)}</div>
+                        <div><strong>Turno:</strong> ${this.escapeHtml(turno)}</div>
+                        <div><strong>Data:</strong> ${this.escapeHtml(dataRel)}</div>
                     </div>
-                    <div class="sam-footer">SAMARCO</div>
+
+                    <div style="
+                        position:absolute;
+                        top:52px;
+                        right:0;
+                        width:0;
+                        height:0;
+                        border-left:220px solid transparent;
+                        border-bottom:220px solid #f3f4f6;
+                        filter:drop-shadow(-4px 4px 0 rgba(0,0,0,.10));
+                    "></div>
+
+                    <div style="
+                        position:absolute;
+                        top:40px;
+                        right:58px;
+                        width:18px;
+                        height:18px;
+                        background:#9fb3c3;
+                        transform:rotate(45deg);
+                    "></div>
+
+                    <div style="
+                        position:absolute;
+                        left:0;
+                        right:0;
+                        bottom:28px;
+                        text-align:center;
+                        font-size:22px;
+                        font-weight:900;
+                        letter-spacing:3px;
+                        color:#0b5fa5;
+                        opacity:.95;
+                    ">SAMARCO</div>
                 </div>
                 <div class="rp-page-no">${pageNo}</div>
             </section>
@@ -2230,12 +2387,13 @@ const app = new NazaFieldPro();
             </section>
         `;
 
-        const frontPages = frontSections.map((section, index) => this.renderFrontSectionPage(section, index + 2)).join('');
-        const reconPages = this.renderReconPage('u2', frontSections.length + 2) + this.renderReconPage('u3', frontSections.length + 3);
-        const retomadaPages = retomadaSections.map((section, index) => this.renderRetomadaPage(section, frontSections.length + 4 + index)).join('');
-        const techPage = this.renderTechPage(frontSections.length + 4 + retomadaSections.length);
+        // Página azul do técnico como página 2 (antes ficava no final).
+        const techPage = this.renderTechPage(2);
+        const frontPages = frontSections.map((section, index) => this.renderFrontSectionPage(section, index + 3)).join('');
+        const reconPages = this.renderReconPage('u2', frontSections.length + 3) + this.renderReconPage('u3', frontSections.length + 4);
+        const retomadaPages = retomadaSections.map((section, index) => this.renderRetomadaPage(section, frontSections.length + 5 + index)).join('');
 
-        reportBook.innerHTML = cover + frontPages + reconPages + retomadaPages + techPage;
+        reportBook.innerHTML = cover + techPage + frontPages + reconPages + retomadaPages;
         setTimeout(() => this.renderReportCharts(frontSections, retomadaSections), 60);
     };
 
@@ -2308,6 +2466,7 @@ const app = new NazaFieldPro();
 .sheet-grid th{position:sticky;top:0;background:#edf4fb;color:#173a63;font-size:12px;font-weight:900;padding:10px 8px;z-index:2;text-align:left}
 .sheet-grid td input{width:100%;border:0;padding:10px 8px;background:transparent;font-size:13px;color:#12263f}
 .sheet-grid td input:focus{outline:2px solid rgba(0,160,227,.25);background:#f8fcff}
+.naza-row-new{background:#dcfce7!important}
 .sheet-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#526173}
 .sheet-meta strong{color:#173a63}
 .kpi-forecast-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
@@ -2706,6 +2865,11 @@ const app = new NazaFieldPro();
     return 'Movimentação registrada no período.';
   };
 
+  app.renderFrontNewBadge = function(item) {
+    if (!item || !item.criadaNova) return '';
+    return `<span style="display:inline-flex;margin-left:8px;padding:2px 8px;border-radius:999px;background:#7c3aed;color:#fff;font-size:10px;font-weight:900;vertical-align:middle">Criada Nova</span>`;
+  };
+
   app.clearFrontReportState = function(){
     this.destroyReportCharts && this.destroyReportCharts();
     const reportBook = document.getElementById('reportBook');
@@ -2842,12 +3006,21 @@ const app = new NazaFieldPro();
             }
           }
         }
-        if (rIdx < 0 || rIdx >= rows.length) return;
+        if (rIdx < 0 || rIdx >= rows.length) {
+          // Se não achou linha (ex: destino mudou -> nova frente), cria uma nova linha no fim.
+          const fc = String(f.codigo || '').trim();
+          const fd = String(f.destino || '').trim();
+          if (!fc || !fd) return;
+          rIdx = rows.length;
+          rows.push([]);
+        }
         while (rows.length <= rIdx) rows.push([]);
         let row = rows[rIdx];
         if (!Array.isArray(row)) row = [];
         while (row.length <= maxCol) row.push('');
         const prev = JSON.stringify(row);
+        // Marca visual para a aba Planilhas.
+        if (f.criadaNova) row.__nazaNova = true;
         if (planIdx >= 0) row[planIdx] = f.planejado != null && f.planejado !== '' ? Number(f.planejado) : '';
         if (realIdx >= 0) row[realIdx] = f.realizado != null && f.realizado !== '' ? Number(f.realizado) : '';
         if (tipoIdx >= 0 && f.tipo) row[tipoIdx] = f.tipo;
@@ -2858,6 +3031,9 @@ const app = new NazaFieldPro();
         if (pcIdx >= 0 && f.pc != null && f.pc !== '') row[pcIdx] = Number(f.pc);
         if (ppcIdx >= 0 && f.ppc != null && f.ppc !== '') row[ppcIdx] = Number(f.ppc);
         if (obsIdx >= 0 && f.obs != null) row[obsIdx] = String(f.obs);
+        // Garante código/destino preenchidos quando criamos linha nova.
+        if (codeIdx >= 0 && (row[codeIdx] == null || row[codeIdx] === '')) row[codeIdx] = String(f.codigo || '');
+        if (destIdx >= 0 && (row[destIdx] == null || row[destIdx] === '')) row[destIdx] = String(f.destino || '');
         rows[rIdx] = row;
         if (JSON.stringify(row) !== prev) changed = true;
       });
@@ -2904,7 +3080,7 @@ const app = new NazaFieldPro();
             <tr>${colLetters.map((c,i)=>`<th>${header[i] || c}</th>`).join('')}</tr>
           </thead>
           <tbody>
-            ${bodyRows.map((row,rIdx)=>`<tr>${Array.from({length:maxCols}, (_,cIdx)=>`<td><input value="${String(row[cIdx] ?? '').replace(/"/g,'&quot;')}" onchange="app.updateSheetCell('${String(this.data.sheetActive).replace(/'/g,"\\'")}', ${headerIdx + 1 + rIdx}, ${cIdx}, this.value)"></td>`).join('')}</tr>`).join('')}
+            ${bodyRows.map((row,rIdx)=>`<tr class="${row && row.__nazaNova ? 'naza-row-new' : ''}">${Array.from({length:maxCols}, (_,cIdx)=>`<td><input value="${String(row[cIdx] ?? '').replace(/"/g,'&quot;')}" onchange="app.updateSheetCell('${String(this.data.sheetActive).replace(/'/g,"\\'")}', ${headerIdx + 1 + rIdx}, ${cIdx}, this.value)"></td>`).join('')}</tr>`).join('')}
             <tr>${Array.from({length:maxCols}, (_,cIdx)=>`<td><input placeholder="Nova linha" onchange="app.updateSheetCell('${String(this.data.sheetActive).replace(/'/g,"\\'")}', ${headerIdx + 1 + bodyRows.length}, ${cIdx}, this.value)"></td>`).join('')}</tr>
           </tbody>
         </table>
@@ -3983,7 +4159,7 @@ const app = new NazaFieldPro();
       const justification = this.buildJustification(item);
       return `
         <tr>
-          <td>${item.codigo}</td>
+          <td>${item.codigo}${this.renderFrontNewBadge(item)}</td>
           <td style="text-align:center">${item.destino || '-'}</td>
           <td style="text-align:center">${this.percentMetric(this.computeIA(item))}</td>
           <td style="text-align:center">${this.percentMetric(this.computeIC(item))}</td>
@@ -5030,6 +5206,9 @@ const app = new NazaFieldPro();
     ['u2', 'u3'].forEach((u) => {
       if (!localR[u]) return;
       if (!base[u]) base[u] = {};
+      // Observações livres (textarea) — preferir local se preenchido.
+      if (typeof localR[u].obs === 'string' && localR[u].obs.trim() !== '') base[u].obs = localR[u].obs.trim();
+      else if (typeof base[u].obs !== 'string' && typeof cloudR?.[u]?.obs === 'string') base[u].obs = cloudR[u].obs;
       Object.keys(localR[u]).forEach((tipo) => {
         const L = localR[u][tipo];
         const C = base[u][tipo] || {};
