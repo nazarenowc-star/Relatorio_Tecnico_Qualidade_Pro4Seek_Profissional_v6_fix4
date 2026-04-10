@@ -4,24 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0066CC">
-    <link rel="manifest" href="./manifest.webmanifest">
     <title>NAZA FIELD PRO v3.1 | Importação Automática e Fotos</title>
 
-    <!-- Tailwind CSS (offline forte: versão local) -->
-    <script src="./vendor/tailwindcss.com.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Chart.js -->
-    <script src="./vendor/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <!-- jsPDF e html2canvas -->
-    <script src="./vendor/jspdf.umd.min.js"></script>
-    <script src="./vendor/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- SheetJS para Excel -->
-    <script src="./vendor/xlsx.full.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
     <!-- QR Code Scanner -->
-    <script src="./vendor/html5-qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
     <style>
         /* --- Estilos mantidos e aprimorados da versão anterior --- */
@@ -638,9 +637,9 @@
 
 
     <!-- Firebase SDK v10 (Compat) -->
-    <script src="./vendor/firebase-app-compat.js"></script>
-    <script src="./vendor/firebase-auth-compat.js"></script>
-    <script src="./vendor/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
     <style id="auth-styles">
       #authScreen { position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#001a33 0%,#003d7a 50%,#0066CC 100%);display:flex;align-items:center;justify-content:center;flex-direction:column }
@@ -5661,19 +5660,91 @@ const app = new NazaFieldPro();
 </script>
 
 <script id="service-worker-register">
-// Offline forte (GitHub Pages): registra sw.js real do repo.
-(function () {
-  if (!('serviceWorker' in navigator)) return;
-  if (location.protocol === 'file:') return;
-  window.addEventListener('load', async () => {
-    try {
-      const reg = await navigator.serviceWorker.register('./sw.js');
-      console.log('✅ Service Worker registrado:', reg.scope);
-    } catch (err) {
-      console.warn('⚠️ Falha ao registrar Service Worker:', err);
-    }
-  });
-})();
+// Register Service Worker for offline capability
+const _nazaHost = (typeof location !== 'undefined' && location.hostname) ? location.hostname : '';
+const _nazaSkipBlobSW = /\.github\.io$/i.test(_nazaHost) || location.protocol === 'file:';
+if ('serviceWorker' in navigator && !_nazaSkipBlobSW) {
+  const swCode = `
+    const CACHE_NAME = 'naza-field-pro-v7';
+    const CDN_URLS = [
+      'https://cdn.tailwindcss.com',
+      'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+      'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js',
+      'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js',
+      'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'
+    ];
+
+    self.addEventListener('install', event => {
+      event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+          return Promise.allSettled(CDN_URLS.map(url => cache.add(url).catch(()=>{})));
+        }).then(() => self.skipWaiting())
+      );
+    });
+
+    self.addEventListener('activate', event => {
+      event.waitUntil(
+        caches.keys().then(keys => Promise.all(
+          keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+        )).then(() => self.clients.claim())
+      );
+    });
+
+    self.addEventListener('fetch', event => {
+      const url = event.request.url;
+      // Cache-first for CDN resources
+      if (CDN_URLS.some(cdn => url.startsWith(cdn.split('?')[0])) || url.includes('fonts.gstatic.com')) {
+        event.respondWith(
+          caches.match(event.request).then(cached => {
+            if (cached) return cached;
+            return fetch(event.request).then(response => {
+              if (response.ok) {
+                const clone = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+              }
+              return response;
+            }).catch(() => new Response('Offline', {status:503}));
+          })
+        );
+        return;
+      }
+      // Network-first for HTML and API
+      if (event.request.mode === 'navigate') {
+        event.respondWith(
+          caches.match(event.request).then(cached => {
+            return fetch(event.request).then(response => {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+              return response;
+            }).catch(() => cached || new Response('<h1>Offline - Recarregue quando houver conexão</h1>', {headers:{'Content-Type':'text/html'}}));
+          })
+        );
+        return;
+      }
+      // Default: network first, fallback cache
+      event.respondWith(
+        fetch(event.request).then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return response;
+        }).catch(() => caches.match(event.request))
+      );
+    });
+  `;
+  
+  const blob = new Blob([swCode], {type: 'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl, {scope: '/'}).then(reg => {
+    console.log('Service Worker registrado para modo offline');
+  }).catch(() => {});
+}
 
 // Connectivity monitoring
 setInterval(() => {
