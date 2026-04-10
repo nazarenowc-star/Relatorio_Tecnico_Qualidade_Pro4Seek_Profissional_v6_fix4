@@ -4878,6 +4878,21 @@ const app = new NazaFieldPro();
     return typeof t === 'number' && t > 0 ? t : 0;
   }
 
+  function frenteKey(f) {
+    return `${String(f.codigo || '').trim().toUpperCase()}|${String(f.destino || '').trim()}`;
+  }
+
+  /** Nuvem primeiro; frentes só no aparelho entram no fim (evita apagar trabalho local ao puxar). */
+  function mergeFrentesUnion(cloudFrentes, localFrentes) {
+    const map = new Map();
+    (cloudFrentes || []).forEach(f => map.set(frenteKey(f), { ...f }));
+    (localFrentes || []).forEach(f => {
+      const k = frenteKey(f);
+      if (!map.has(k)) map.set(k, { ...f });
+    });
+    return [...map.values()];
+  }
+
   function shouldApplyCloud(cloudData, localData, opts) {
     if (!cloudData) return false;
     const ct = cloudTimestamp(cloudData);
@@ -4885,7 +4900,6 @@ const app = new NazaFieldPro();
     if (ct > 0 && ct <= lastAppliedCloudSync) return false;
     const lt = Number(localData && (localData.lastSync || localData.cloudSavedAt || 0));
     if (ct > 0 && lt > 0 && ct < lt) return false;
-    if (localData && localData.lastModified && ct > 0 && ct < localData.lastModified) return false;
     if (ct > 0) return true;
     const cf = cloudData.frentes;
     const lf = localData && localData.frentes;
@@ -4896,9 +4910,11 @@ const app = new NazaFieldPro();
   async function applyCloudPayload(cloudData, localData) {
     const merged = JSON.parse(JSON.stringify(cloudData));
     if (!merged.lastSync) merged.lastSync = Date.now();
-    if (localData && localData.frentes && merged.frentes) {
+    const lfAll = localData && localData.frentes ? localData.frentes : [];
+    merged.frentes = mergeFrentesUnion(merged.frentes || [], lfAll);
+    if (lfAll.length && merged.frentes) {
       merged.frentes = merged.frentes.map(cf => {
-        const local = localData.frentes.find(lf => lf.codigo === cf.codigo && lf.destino === cf.destino);
+        const local = lfAll.find(lf => frenteKey(lf) === frenteKey(cf));
         if (local && local.fotos && local.fotos.length > 0) cf.fotos = local.fotos;
         return cf;
       });
@@ -4969,6 +4985,10 @@ const app = new NazaFieldPro();
       offlineHandler = () => updateSyncUI('offline');
       window.addEventListener('online', onlineHandler);
       window.addEventListener('offline', offlineHandler);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden || !userId || !navigator.onLine) return;
+        this.pullFromCloud({});
+      });
     },
 
     attachRealtimeListener() {
@@ -5010,6 +5030,15 @@ const app = new NazaFieldPro();
           if (window.app && typeof app.showToast === 'function') {
             app.showToast('Dados da nuvem aplicados neste aparelho.');
           }
+          return;
+        }
+
+        const rts = cloudTimestamp(remote);
+        const lts = Number(data.lastSync || data.cloudSavedAt || 0);
+        if (remote && rts > 0 && lts > 0 && rts > lts && !data._forceEmptyFrentesPush) {
+          console.warn('☁️ Push adiado: nuvem mais recente que este aparelho — mesclando da nuvem.');
+          await applyCloudPayload(remote, data);
+          updateSyncUI('online');
           return;
         }
 
@@ -5064,11 +5093,10 @@ const app = new NazaFieldPro();
           if (force) apply = true;
           else if (initial) {
             const cts = cloudTimestamp(cloudData);
-            const localNewerPending = localData && localData.lastModified && cts > 0 && cts < localData.lastModified;
             const localLs = Number(localData && (localData.lastSync || localData.cloudSavedAt || 0));
             const cloudHasF = Array.isArray(cloudData.frentes) && cloudData.frentes.length > 0;
             const localHasF = localData && Array.isArray(localData.frentes) && localData.frentes.length > 0;
-            apply = !localNewerPending && (
+            apply = (
               !localData ||
               cts > localLs ||
               (!localHasF && cloudHasF) ||
