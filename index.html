@@ -1004,30 +1004,6 @@ class NazaFieldPro {
         this.setupAutoSave();
         document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
         this.setupSpeechRecognition();
-        this.setupReconObservacoes();
-    }
-
-    setupReconObservacoes() {
-        const bind = (textareaId, usinaKey) => {
-            const el = document.getElementById(textareaId);
-            if (!el) return;
-            if (!this.data.reconciliacao) this.data.reconciliacao = {};
-            if (!this.data.reconciliacao[usinaKey]) this.data.reconciliacao[usinaKey] = {};
-            // carrega valor atual
-            el.value = this.data.reconciliacao[usinaKey].obs || '';
-
-            let t = null;
-            el.addEventListener('input', () => {
-                clearTimeout(t);
-                t = setTimeout(() => {
-                    if (!this.data.reconciliacao[usinaKey]) this.data.reconciliacao[usinaKey] = {};
-                    this.data.reconciliacao[usinaKey].obs = (el.value || '').trim();
-                    this.saveData();
-                }, 250);
-            });
-        };
-        bind('u2_obs', 'u2');
-        bind('u3_obs', 'u3');
     }
 
     setupSpeechRecognition() {
@@ -1394,12 +1370,7 @@ class NazaFieldPro {
         const textarea = document.getElementById(targetId);
         if (btn.classList.contains('recording')) { this.recognition.stop(); return; }
         btn.classList.add('recording'); btn.querySelector('span').textContent = 'GRAVANDO... (CLIQUE PARA PARAR)';
-        this.recognition.onresult = (event) => {
-          const transcript = event.results[0][0].transcript;
-          const currentText = textarea.value;
-          textarea.value = currentText ? currentText + ' ' + transcript : transcript;
-          textarea.dispatchEvent(new Event('input', { bubbles: true }));
-        };
+        this.recognition.onresult = (event) => { const transcript = event.results[0][0].transcript; const currentText = textarea.value; textarea.value = currentText ? currentText + ' ' + transcript : transcript; };
         this.recognition.onerror = (event) => { this.showToast('Erro no reconhecimento: ' + event.error, 'error'); btn.classList.remove('recording'); btn.querySelector('span').textContent = 'FALAR OBSERVAÇÕES'; };
         this.recognition.onend = () => { btn.classList.remove('recording'); btn.querySelector('span').textContent = 'FALAR OBSERVAÇÕES'; };
         this.recognition.start();
@@ -4678,7 +4649,7 @@ const app = new NazaFieldPro();
           {label:'Planejado', data:[0,0,0], backgroundColor:colors[0]},
           {label:'Real', data:[0,0,0], backgroundColor:colors[1]}
         ]},
-        options:{responsive:true, maintainAspectRatio:true, animation:false,
+        options:{responsive:true, maintainAspectRatio:false, animation:false,
           plugins:{legend:{position:'top'}},
           scales:{y:{beginAtZero:true}, x:{ticks:{font:{size:10}}}}
         }
@@ -4693,7 +4664,7 @@ const app = new NazaFieldPro();
       app.charts.br02 = new Chart(br, {
         type:'doughnut',
         data:{labels:['Concluídas','Em Andamento','Pendentes'], datasets:[{data:[0,0,0], backgroundColor:['#00C851','#FFBB33','#FF4444'], borderWidth:2}]},
-        options:{responsive:true, maintainAspectRatio:true, animation:false, plugins:{legend:{position:'bottom'}}}
+        options:{responsive:true, maintainAspectRatio:false, animation:false, plugins:{legend:{position:'bottom'}}}
       });
     }
   };
@@ -5060,9 +5031,6 @@ const app = new NazaFieldPro();
     ['u2', 'u3'].forEach((u) => {
       if (!localR[u]) return;
       if (!base[u]) base[u] = {};
-      // Observações livres (textarea) — preferir local se preenchido.
-      if (typeof localR[u].obs === 'string' && localR[u].obs.trim() !== '') base[u].obs = localR[u].obs.trim();
-      else if (typeof base[u].obs !== 'string' && typeof cloudR?.[u]?.obs === 'string') base[u].obs = cloudR[u].obs;
       Object.keys(localR[u]).forEach((tipo) => {
         const L = localR[u][tipo];
         const C = base[u][tipo] || {};
@@ -5707,7 +5675,7 @@ const app = new NazaFieldPro();
   });
 })();
 
-// Connectivity monitoring (UI)
+// Connectivity monitoring
 setInterval(() => {
   const dot = document.getElementById('syncDot');
   const label = document.getElementById('syncLabel');
