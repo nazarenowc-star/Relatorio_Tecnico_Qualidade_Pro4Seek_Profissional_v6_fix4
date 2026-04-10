@@ -2467,6 +2467,22 @@ const app = new NazaFieldPro();
 .sheet-grid td input{width:100%;border:0;padding:10px 8px;background:transparent;font-size:13px;color:#12263f}
 .sheet-grid td input:focus{outline:2px solid rgba(0,160,227,.25);background:#f8fcff}
 .naza-row-new{background:#dcfce7!important}
+.badge-front-new{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  margin-left:6px;
+  padding:2px 6px;
+  border-radius:999px;
+  background:#7c3aed;
+  color:#fff;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.2px;
+  line-height:1;
+  vertical-align:middle;
+  white-space:nowrap;
+}
 .sheet-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#526173}
 .sheet-meta strong{color:#173a63}
 .kpi-forecast-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
@@ -2867,7 +2883,7 @@ const app = new NazaFieldPro();
 
   app.renderFrontNewBadge = function(item) {
     if (!item || !item.criadaNova) return '';
-    return `<span style="display:inline-flex;margin-left:8px;padding:2px 8px;border-radius:999px;background:#7c3aed;color:#fff;font-size:10px;font-weight:900;vertical-align:middle">Criada Nova</span>`;
+    return `<span class="badge-front-new">Frente nova</span>`;
   };
 
   app.clearFrontReportState = function(){
