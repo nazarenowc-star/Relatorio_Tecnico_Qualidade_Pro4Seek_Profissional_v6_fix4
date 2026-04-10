@@ -4975,9 +4975,10 @@ const app = new NazaFieldPro();
     if (!cloudData) return false;
     const ct = cloudTimestamp(cloudData);
     if (opts && opts.force) return true;
-    if (ct > 0 && ct <= lastAppliedCloudSync) return false;
-    const lt = Number(localData && (localData.lastSync || localData.cloudSavedAt || 0));
-    if (ct > 0 && lt > 0 && ct < lt) return false;
+    // Só ignora snapshot idêntico ao último aplicado (mesmo lastSync). Não usar ct <= lastAppliedCloudSync:
+    // com relógios diferentes entre PC e celular, o outro aparelho pode gravar lastSync “menor” e seria
+    // ignorado para sempre. O merge em applyCloudPayload resolve conflitos de conteúdo.
+    if (ct > 0 && ct === lastAppliedCloudSync) return false;
     if (ct > 0) return true;
     const cf = cloudData.frentes;
     const lf = localData && localData.frentes;
@@ -5128,7 +5129,7 @@ const app = new NazaFieldPro();
               if (!shouldApplyCloud(cloudData, localData, {})) return;
               applyCloudPayload(cloudData, localData).catch((e) => console.error('Apply remote:', e));
             });
-          }, 1000);
+          }, 450);
         },
         (err) => console.error('Firestore snapshot:', err)
       );
@@ -5234,8 +5235,6 @@ const app = new NazaFieldPro();
           if (apply) {
             await applyCloudPayload(cloudData, localData);
             console.log('☁️ Dados da nuvem carregados');
-          } else if (initial && cloudTimestamp(cloudData) > 0) {
-            lastAppliedCloudSync = Math.max(lastAppliedCloudSync, cloudTimestamp(cloudData));
           }
         }
         updateSyncUI('online');
