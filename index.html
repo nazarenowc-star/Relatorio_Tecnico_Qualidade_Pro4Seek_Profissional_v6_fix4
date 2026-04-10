@@ -713,8 +713,9 @@
   firebase.initializeApp(fbConfig);
   window.db = firebase.firestore();
   window.auth = firebase.auth();
-  
-  // Enable offline persistence
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+
+  // Firestore: use regras por usuário, ex. match /users/{userId}/reports/{reportId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
   db.enablePersistence({synchronizeTabs:true}).catch(err => {
     console.warn('Firestore persistence:', err.code);
   });
@@ -729,7 +730,7 @@
       document.getElementById('authRegisterForm').style.display='none';
     },
     async login() {
-      const email = document.getElementById('authEmail').value.trim();
+      const email = document.getElementById('authEmail').value.trim().toLowerCase();
       const pass = document.getElementById('authPassword').value;
       document.getElementById('authError').textContent = '';
       if (!email||!pass) { document.getElementById('authError').textContent='Preencha email e senha'; return; }
@@ -737,16 +738,14 @@
         await auth.signInWithEmailAndPassword(email, pass);
       } catch(e) {
         if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
-          // Auto-create default user
-          try { await auth.createUserWithEmailAndPassword(email, pass); } 
-          catch(e2) { document.getElementById('authError').textContent = e2.message; }
+          document.getElementById('authError').textContent = 'Conta não encontrada ou senha incorreta. Use Cadastrar se for o primeiro acesso (mesmo e-mail nos dois aparelhos).';
         } else {
           document.getElementById('authError').textContent = e.message;
         }
       }
     },
     async register() {
-      const email = document.getElementById('authRegEmail').value.trim();
+      const email = document.getElementById('authRegEmail').value.trim().toLowerCase();
       const pass = document.getElementById('authRegPassword').value;
       const pass2 = document.getElementById('authRegPassword2').value;
       document.getElementById('authRegError').textContent = '';
@@ -5151,10 +5150,12 @@ const app = new NazaFieldPro();
         .then(() => {
           initialHydrationDone = true;
           this.attachRealtimeListener();
+          this.pushToCloud();
         })
         .catch(() => {
           initialHydrationDone = true;
           this.attachRealtimeListener();
+          this.pushToCloud();
         });
 
       clearInterval(syncTimer);
@@ -5163,7 +5164,7 @@ const app = new NazaFieldPro();
       }, SYNC_INTERVAL);
       if (pullTimer) clearInterval(pullTimer);
       pullTimer = setInterval(() => {
-        if (navigator.onLine && userId) this.pullFromCloud({});
+        if (userId) this.pullFromCloud({});
       }, PULL_INTERVAL);
 
       onlineHandler = () => {
@@ -5243,6 +5244,7 @@ const app = new NazaFieldPro();
 
         const cloudData = JSON.parse(JSON.stringify(data));
         delete cloudData._forceEmptyFrentesPush;
+        // Firestore: não envia binário das fotos (evita doc gigante); só fotosCount. Imagens ficam no aparelho.
         if (cloudData.frentes) {
           cloudData.frentes.forEach(f => {
             if (f.fotos && f.fotos.length > 0) {
