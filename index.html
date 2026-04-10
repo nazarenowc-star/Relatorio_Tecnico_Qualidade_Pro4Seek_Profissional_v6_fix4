@@ -4882,14 +4882,33 @@ const app = new NazaFieldPro();
     return `${String(f.codigo || '').trim().toUpperCase()}|${String(f.destino || '').trim()}`;
   }
 
-  /** Nuvem primeiro; frentes só no aparelho entram no fim (evita apagar trabalho local ao puxar). */
+  function rowEditTime(f) {
+    const d = f && (f.data || f.updatedAt);
+    const t = d ? new Date(d).getTime() : 0;
+    return Number.isFinite(t) ? t : 0;
+  }
+
+  /**
+   * Mescla frentes por código+destino: em conflito, vence a linha com `data` (ISO) mais recente.
+   * Assim uma edição no celular não é substituída por cópia velha vinda do PC na nuvem.
+   */
   function mergeFrentesUnion(cloudFrentes, localFrentes) {
     const map = new Map();
-    (cloudFrentes || []).forEach(f => map.set(frenteKey(f), { ...f }));
-    (localFrentes || []).forEach(f => {
+    const upsert = (f) => {
       const k = frenteKey(f);
-      if (!map.has(k)) map.set(k, { ...f });
-    });
+      if (!map.has(k)) {
+        map.set(k, { ...f });
+        return;
+      }
+      const cur = map.get(k);
+      const tNew = rowEditTime(f);
+      const tCur = rowEditTime(cur);
+      if (tNew > tCur) map.set(k, { ...cur, ...f });
+      else if (tNew < tCur) map.set(k, { ...f, ...cur });
+      else map.set(k, { ...cur, ...f });
+    };
+    (cloudFrentes || []).forEach(upsert);
+    (localFrentes || []).forEach(upsert);
     return [...map.values()];
   }
 
@@ -4985,9 +5004,11 @@ const app = new NazaFieldPro();
       offlineHandler = () => updateSyncUI('offline');
       window.addEventListener('online', onlineHandler);
       window.addEventListener('offline', offlineHandler);
+      let _visPullT = null;
       document.addEventListener('visibilitychange', () => {
         if (document.hidden || !userId || !navigator.onLine) return;
-        this.pullFromCloud({});
+        clearTimeout(_visPullT);
+        _visPullT = setTimeout(() => this.pullFromCloud({}), 2000);
       });
     },
 
@@ -4997,6 +5018,7 @@ const app = new NazaFieldPro();
       snapshotUnsub = ref.onSnapshot(
         (snap) => {
           if (!snap.exists || !navigator.onLine) return;
+          if (snap.metadata.hasPendingWrites) return;
           const cloudData = snap.data();
           if (!cloudData) return;
           idbStore.get('naza_app_data').then((localData) => {
@@ -5036,10 +5058,10 @@ const app = new NazaFieldPro();
         const rts = cloudTimestamp(remote);
         const lts = Number(data.lastSync || data.cloudSavedAt || 0);
         if (remote && rts > 0 && lts > 0 && rts > lts && !data._forceEmptyFrentesPush) {
-          console.warn('☁️ Push adiado: nuvem mais recente que este aparelho — mesclando da nuvem.');
+          console.warn('☁️ Nuvem mais recente — mesclando com o que está neste aparelho e enviando o resultado.');
           await applyCloudPayload(remote, data);
-          updateSyncUI('online');
-          return;
+          data = await idbStore.get('naza_app_data');
+          if (!data) { updateSyncUI('online'); return; }
         }
 
         const cloudData = JSON.parse(JSON.stringify(data));
