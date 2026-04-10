@@ -1851,6 +1851,14 @@ const app = new NazaFieldPro();
         this.reportCharts = [];
     };
 
+    app.destroyChartOnCanvas = function(canvasEl) {
+        if (!canvasEl || typeof Chart === 'undefined' || !Chart.getChart) return;
+        try {
+            const ch = Chart.getChart(canvasEl);
+            if (ch) ch.destroy();
+        } catch (e) {}
+    };
+
     app.ensureReportScaffold = function() {
         const preview = document.getElementById('relatorioPreview');
         preview.className = 'report-book-shell shadow-lg';
@@ -3225,6 +3233,7 @@ const app = new NazaFieldPro();
       setTimeout(()=>{
         const c = document.getElementById('chart-projecao-extra');
         if (c) {
+          this.destroyChartOnCanvas(c);
           this.reportCharts.push(new Chart(c, {
             type: 'bar',
             data: { labels:['Hora','Turno','Dia'], datasets:[{label:'Massa prevista (t)', data:[sim.massaHora, sim.massaHora*sim.horasTurno, sim.massaHora*sim.horasTurno*2], backgroundColor:['#75a8d6','#0b2f7b','#0ea5e9']}]},
@@ -4275,6 +4284,7 @@ const app = new NazaFieldPro();
       setTimeout(()=>{
         const c = document.getElementById('chart-projecao-extra');
         if (c) {
+          this.destroyChartOnCanvas(c);
           this.reportCharts.push(new Chart(c, {
             data:{labels:['Hora','Turno','Dia'], datasets:[
               {type:'bar', label:'Massa prevista (t)', data:[ds.effectiveHourMass, ds.turnoMass, ds.dayMass], backgroundColor:['#75a8d6','#0b2f7b','#0ea5e9'], yAxisID:'yMass'},
@@ -4447,6 +4457,7 @@ const app = new NazaFieldPro();
 
         const c1 = document.getElementById('chart-projecao-horaria-report');
         if (c1) {
+          this.destroyChartOnCanvas(c1);
           this.reportCharts.push(new Chart(c1, {
             data:{labels,datasets:[
               {type:'bar', label:'Massa prevista (t)', data:massSeries, backgroundColor:'#0ea5e9', borderRadius:7, yAxisID:'y'},
@@ -4469,6 +4480,7 @@ const app = new NazaFieldPro();
 
         const c2 = document.getElementById('chart-projecao-usina-report');
         if (c2) {
+          this.destroyChartOnCanvas(c2);
           const routes = ds.routes || [];
           const routeTotals = routes.reduce((acc,r)=>{acc.u2+=(+r.u2||0);acc.u3+=(+r.u3||0);acc.u4+=(+r.u4||0);return acc;},{u2:0,u3:0,u4:0});
           const divisor = Math.max(1, routes.length);
@@ -4877,6 +4889,46 @@ const app = new NazaFieldPro();
     });
   }
 
+  /** Firestore não aceita array de arrays; planilha 2D vira lista de { cells: [...] }. */
+  function sheetClonesToFirestore(clones) {
+    if (!clones || typeof clones !== 'object') return clones;
+    const out = {};
+    Object.keys(clones).forEach((k) => {
+      const rows = clones[k];
+      if (!Array.isArray(rows)) {
+        out[k] = rows;
+        return;
+      }
+      out[k] = rows.map((row) => ({
+        cells: Array.isArray(row) ? row.slice() : []
+      }));
+    });
+    return out;
+  }
+
+  function sheetClonesFromFirestore(clones) {
+    if (!clones || typeof clones !== 'object') return clones;
+    const out = {};
+    Object.keys(clones).forEach((k) => {
+      const rows = clones[k];
+      if (!Array.isArray(rows)) {
+        out[k] = rows;
+        return;
+      }
+      if (!rows.length) {
+        out[k] = [];
+        return;
+      }
+      const first = rows[0];
+      if (first && typeof first === 'object' && !Array.isArray(first) && Array.isArray(first.cells)) {
+        out[k] = rows.map((r) => (r && Array.isArray(r.cells) ? r.cells.slice() : []));
+      } else {
+        out[k] = rows.map((r) => (Array.isArray(r) ? r.slice() : []));
+      }
+    });
+    return out;
+  }
+
   function updateSyncUI(status) {
     const dot = document.getElementById('syncDot');
     const label = document.getElementById('syncLabel');
@@ -5068,6 +5120,7 @@ const app = new NazaFieldPro();
 
   async function applyCloudPayload(cloudData, localData) {
     const merged = JSON.parse(JSON.stringify(cloudData));
+    if (merged.sheetClones) merged.sheetClones = sheetClonesFromFirestore(merged.sheetClones);
     if (!merged.lastSync) merged.lastSync = Date.now();
     const lfAll = localData && localData.frentes ? localData.frentes : [];
     merged.frentes = mergeFrentesUnion(merged.frentes || [], lfAll);
@@ -5244,6 +5297,7 @@ const app = new NazaFieldPro();
 
         const cloudData = JSON.parse(JSON.stringify(data));
         delete cloudData._forceEmptyFrentesPush;
+        if (cloudData.sheetClones) cloudData.sheetClones = sheetClonesToFirestore(cloudData.sheetClones);
         // Firestore: não envia binário das fotos (evita doc gigante); só fotosCount. Imagens ficam no aparelho.
         if (cloudData.frentes) {
           cloudData.frentes.forEach(f => {
@@ -6489,6 +6543,7 @@ setInterval(() => {
   };
 
   app.syncSimulacaoToFirebase = function() {
+    if (window.cloudSync) return;
     if (!window.db || !navigator.onLine) return;
     const dados = {
       timestamp: new Date(),
@@ -6516,6 +6571,7 @@ setInterval(() => {
 
   // Save all operational data to Firestore
   app.syncAllDataToFirebase = function() {
+    if (window.cloudSync) return;
     if (!window.db || !navigator.onLine || !app.data) return;
     const uid = (window.auth && auth.currentUser) ? auth.currentUser.uid : 'anonimo';
     const docRef = db.collection('dados_operacionais').doc(uid);
