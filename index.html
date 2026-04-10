@@ -1019,6 +1019,7 @@ class NazaFieldPro {
                 t = setTimeout(() => {
                     if (!this.data.reconciliacao[usinaKey]) this.data.reconciliacao[usinaKey] = {};
                     this.data.reconciliacao[usinaKey].obs = (el.value || '').trim();
+                    this.data.reconciliacao[usinaKey].obsUpdatedAt = Date.now();
                     this.saveData();
                 }, 250);
             });
@@ -4175,6 +4176,7 @@ const app = new NazaFieldPro();
         this.data.reconciliacao = this.data.reconciliacao || {};
         this.data.reconciliacao[usina] = this.data.reconciliacao[usina] || {};
         this.data.reconciliacao[usina].obs = (el.innerText || '').trim();
+        this.data.reconciliacao[usina].obsUpdatedAt = Date.now();
         this.saveData();
       };
       el.addEventListener('input', sync);
@@ -5309,9 +5311,20 @@ const app = new NazaFieldPro();
     ['u2', 'u3'].forEach((u) => {
       if (!localR[u]) return;
       if (!base[u]) base[u] = {};
-      // Observações livres (textarea) — preferir local se preenchido.
-      if (typeof localR[u].obs === 'string' && localR[u].obs.trim() !== '') base[u].obs = localR[u].obs.trim();
-      else if (typeof base[u].obs !== 'string' && typeof cloudR?.[u]?.obs === 'string') base[u].obs = cloudR[u].obs;
+      // Observações livres: escolher a versão mais recente (PC/celular).
+      const lObs = typeof localR[u].obs === 'string' ? localR[u].obs.trim() : '';
+      const cObs = typeof base[u].obs === 'string' ? String(base[u].obs).trim() : '';
+      const lTs = Number(localR[u].obsUpdatedAt || 0);
+      const cTs = Number(base[u].obsUpdatedAt || cloudR?.[u]?.obsUpdatedAt || 0);
+      if (lObs || cObs) {
+        if (lTs >= cTs) {
+          base[u].obs = lObs;
+          base[u].obsUpdatedAt = lTs || Date.now();
+        } else {
+          base[u].obs = cObs;
+          base[u].obsUpdatedAt = cTs;
+        }
+      }
       Object.keys(localR[u]).forEach((tipo) => {
         const L = localR[u][tipo];
         const C = base[u][tipo] || {};
