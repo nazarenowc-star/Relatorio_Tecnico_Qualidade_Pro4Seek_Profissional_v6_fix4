@@ -2773,7 +2773,6 @@ const app = new NazaFieldPro();
       this.data.sheetOrder.push(name);
     });
     this.data.sheetActive = this.data.sheetOrder[0] || '';
-    this.data.sheetClonesEditedAt = Date.now();
   };
 
   app.importFile = async function(input){
@@ -2865,11 +2864,8 @@ const app = new NazaFieldPro();
     const tabs = document.getElementById('sheetTabs');
     const wrap = document.getElementById('sheetWorkspace');
     if (!tabs || !wrap) return;
-    let synced = false;
-    if (!(window.cloudSync && cloudSync.applyingRemote)) {
-      synced = this.syncOperationalFrentesToSheetClones();
-      if (synced) this.saveData();
-    }
+    const synced = this.syncOperationalFrentesToSheetClones();
+    if (synced) this.saveData();
     const order = this.data.sheetOrder || [];
     const sheets = this.data.sheetClones || {};
     if (!order.length) {
@@ -2920,7 +2916,6 @@ const app = new NazaFieldPro();
     while (rows[rowIdx].length <= colIdx) rows[rowIdx].push('');
     rows[rowIdx][colIdx] = value;
     this.data.sheetClones[sheetName] = rows;
-    this.data.sheetClonesEditedAt = Date.now();
     this.syncSheetCloneToOperationalData(sheetName);
     this.saveData();
     this.renderSheetWorkspace();
@@ -2935,7 +2930,6 @@ const app = new NazaFieldPro();
     this.data.sheetClones[name] = [['Campo','Valor','Observação']];
     this.data.sheetOrder = [...(this.data.sheetOrder||[]), name];
     this.data.sheetActive = name;
-    this.data.sheetClonesEditedAt = Date.now();
     this.saveData();
     this.renderSheetWorkspace();
     this.showToast('Nova aba criada com sucesso.');
@@ -3414,7 +3408,6 @@ const app = new NazaFieldPro();
     this.data.sheetClones = this.data.sheetClones || {};
     this.data.sheetOrder = Array.isArray(this.data.sheetOrder) ? this.data.sheetOrder : Object.keys(this.data.sheetClones);
     this.data.sheetActive = this.data.sheetActive || this.data.sheetOrder[0] || '';
-    this.data.sheetClonesEditedAt = Number(this.data.sheetClonesEditedAt) || 0;
     this.data.simulacao = Object.assign({}, DEFAULT_SIM, this.data.simulacao || {});
     this.data.desviador = Array.isArray(this.data.desviador) ? this.data.desviador : [];
     this.data.frentes = this.data.frentes.map(f => ({
@@ -4844,7 +4837,6 @@ const app = new NazaFieldPro();
   let lastAppliedCloudSync = 0;
   let applyingRemote = false;
   let initialHydrationDone = false;
-  let snapshotApplyTimer = null;
   const SYNC_INTERVAL = 30000; // 30s
   const PULL_INTERVAL = 120000; // backup: puxar nuvem a cada 2 min (snapshot às vezes falha em rede instável)
 
@@ -4971,14 +4963,90 @@ const app = new NazaFieldPro();
     return base;
   }
 
+  function mergeSheetRows(cloudRows, localRows) {
+    const maxW = Math.max(
+      1,
+      ...((cloudRows || []).map((r) => (r && r.length) || 0)),
+      ...((localRows || []).map((r) => (r && r.length) || 0))
+    );
+    const header = [];
+    for (let c = 0; c < maxW; c++) {
+      const lv = localRows[0] && localRows[0][c];
+      const cv = cloudRows[0] && cloudRows[0][c];
+      const lEmpty = lv === '' || lv == null || lv === undefined;
+      const cEmpty = cv === '' || cv == null || cv === undefined;
+      if (!lEmpty) header[c] = lv;
+      else if (!cEmpty) header[c] = cv;
+      else header[c] = '';
+    }
+    const map = new Map();
+    const rowSig = (row) => {
+      if (!row || !row.length) return '';
+      return [0, 1, 2].map((i) => String(row[i] ?? '').trim().toUpperCase()).join('|');
+    };
+    const pad = (row) => {
+      const o = [];
+      for (let i = 0; i < maxW; i++) o[i] = row && row[i] !== undefined ? row[i] : '';
+      return o;
+    };
+    const mergeCells = (cloudRow, localRow) => {
+      const len = Math.max((cloudRow && cloudRow.length) || 0, (localRow && localRow.length) || 0, maxW);
+      const o = [];
+      for (let i = 0; i < len; i++) {
+        const lv = localRow && localRow[i];
+        const cv = cloudRow && cloudRow[i];
+        const lEmpty = lv === '' || lv == null || lv === undefined;
+        const cEmpty = cv === '' || cv == null || cv === undefined;
+        if (!lEmpty) o[i] = lv;
+        else if (!cEmpty) o[i] = cv;
+        else o[i] = '';
+      }
+      return o;
+    };
+    const add = (rows, isLocal) => {
+      for (let r = 1; r < (rows || []).length; r++) {
+        const row = rows[r];
+        if (!row) continue;
+        const sig = rowSig(row);
+        if (!sig || sig === '|||') continue;
+        const nr = pad(row);
+        if (!map.has(sig)) map.set(sig, nr);
+        else if (isLocal) map.set(sig, mergeCells(map.get(sig), nr));
+      }
+    };
+    add(cloudRows, false);
+    add(localRows, true);
+    return [pad(header), ...[...map.values()].map((r) => pad(r))];
+  }
+
+  function mergeSheetClones(cloudSc, localSc) {
+    const cloud = cloudSc || {};
+    const local = localSc || {};
+    const names = new Set([...Object.keys(cloud), ...Object.keys(local)]);
+    const out = {};
+    names.forEach((name) => {
+      const cr = cloud[name];
+      const lr = local[name];
+      if (!lr || !lr.length) {
+        out[name] = cr && cr.length ? JSON.parse(JSON.stringify(cr)) : lr || [[]];
+        return;
+      }
+      if (!cr || !cr.length) {
+        out[name] = JSON.parse(JSON.stringify(lr));
+        return;
+      }
+      out[name] = mergeSheetRows(cr, lr);
+    });
+    return out;
+  }
+
   function shouldApplyCloud(cloudData, localData, opts) {
     if (!cloudData) return false;
     const ct = cloudTimestamp(cloudData);
     if (opts && opts.force) return true;
-    // Só ignora snapshot idêntico ao último aplicado (mesmo lastSync). Não usar ct <= lastAppliedCloudSync:
-    // com relógios diferentes entre PC e celular, o outro aparelho pode gravar lastSync “menor” e seria
-    // ignorado para sempre. O merge em applyCloudPayload resolve conflitos de conteúdo.
-    if (ct > 0 && ct === lastAppliedCloudSync) return false;
+    if (ct > 0 && ct <= lastAppliedCloudSync) return false;
+    const lt = Number(localData && (localData.lastSync || localData.cloudSavedAt || 0));
+    if (ct > 0 && lt > 0 && ct < lt) return false;
     if (ct > 0) return true;
     const cf = cloudData.frentes;
     const lf = localData && localData.frentes;
@@ -5001,32 +5069,12 @@ const app = new NazaFieldPro();
     if (localData) {
       merged.retomadas = mergeRetomadasUnion(merged.retomadas || [], localData.retomadas || []);
       merged.reconciliacao = mergeReconciliacaoLocalPrefer(localData.reconciliacao, merged.reconciliacao);
-      const cloudSheetTs = Number(cloudData && cloudData.sheetClonesEditedAt) || 0;
-      const localSheetTs = Number(localData.sheetClonesEditedAt) || 0;
-      if (localSheetTs > cloudSheetTs) {
-        merged.sheetClones = JSON.parse(JSON.stringify(localData.sheetClones || {}));
-        merged.sheetClonesEditedAt = localSheetTs;
-        const lo = Array.isArray(localData.sheetOrder) ? localData.sheetOrder : [];
-        const mo = Array.isArray(merged.sheetOrder) ? merged.sheetOrder : [];
-        merged.sheetOrder = [...new Set([...lo, ...mo])];
-        if (localData.sheetActive && merged.sheetClones[localData.sheetActive]) {
-          merged.sheetActive = localData.sheetActive;
-        }
-      } else {
-        merged.sheetClones = JSON.parse(JSON.stringify(merged.sheetClones || {}));
-        const lc = localData.sheetClones || {};
-        Object.keys(lc).forEach((k) => {
-          if (!merged.sheetClones[k] || !merged.sheetClones[k].length) {
-            merged.sheetClones[k] = JSON.parse(JSON.stringify(lc[k]));
-          }
-        });
-        merged.sheetClonesEditedAt = Math.max(cloudSheetTs, localSheetTs);
-        const lo = Array.isArray(localData.sheetOrder) ? localData.sheetOrder : [];
-        const mo = Array.isArray(merged.sheetOrder) ? merged.sheetOrder : [];
-        merged.sheetOrder = [...new Set([...mo, ...lo])];
-        if (localData.sheetActive && merged.sheetClones[localData.sheetActive]) {
-          merged.sheetActive = localData.sheetActive;
-        }
+      merged.sheetClones = mergeSheetClones(merged.sheetClones, localData.sheetClones);
+      const lo = Array.isArray(localData.sheetOrder) ? localData.sheetOrder : [];
+      const mo = Array.isArray(merged.sheetOrder) ? merged.sheetOrder : [];
+      merged.sheetOrder = [...new Set([...lo, ...mo])];
+      if (localData.sheetActive && merged.sheetClones && merged.sheetClones[localData.sheetActive]) {
+        merged.sheetActive = localData.sheetActive;
       }
       if (localData.simulacao && typeof localData.simulacao === 'object') {
         merged.simulacao = { ...(merged.simulacao || {}), ...localData.simulacao };
@@ -5063,7 +5111,6 @@ const app = new NazaFieldPro();
       clearInterval(syncTimer);
       syncTimer = null;
       if (pullTimer) { clearInterval(pullTimer); pullTimer = null; }
-      if (snapshotApplyTimer) { clearTimeout(snapshotApplyTimer); snapshotApplyTimer = null; }
       if (onlineHandler) window.removeEventListener('online', onlineHandler);
       if (offlineHandler) window.removeEventListener('offline', offlineHandler);
       onlineHandler = null;
@@ -5122,14 +5169,10 @@ const app = new NazaFieldPro();
           if (snap.metadata.hasPendingWrites) return;
           const cloudData = snap.data();
           if (!cloudData) return;
-          clearTimeout(snapshotApplyTimer);
-          snapshotApplyTimer = setTimeout(() => {
-            snapshotApplyTimer = null;
-            idbStore.get('naza_app_data').then((localData) => {
-              if (!shouldApplyCloud(cloudData, localData, {})) return;
-              applyCloudPayload(cloudData, localData).catch((e) => console.error('Apply remote:', e));
-            });
-          }, 450);
+          idbStore.get('naza_app_data').then((localData) => {
+            if (!shouldApplyCloud(cloudData, localData, {})) return;
+            applyCloudPayload(cloudData, localData).catch((e) => console.error('Apply remote:', e));
+          });
         },
         (err) => console.error('Firestore snapshot:', err)
       );
@@ -5235,6 +5278,8 @@ const app = new NazaFieldPro();
           if (apply) {
             await applyCloudPayload(cloudData, localData);
             console.log('☁️ Dados da nuvem carregados');
+          } else if (initial && cloudTimestamp(cloudData) > 0) {
+            lastAppliedCloudSync = Math.max(lastAppliedCloudSync, cloudTimestamp(cloudData));
           }
         }
         updateSyncUI('online');
