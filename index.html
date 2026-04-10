@@ -4929,6 +4929,28 @@ const app = new NazaFieldPro();
     return out;
   }
 
+  /** Lê planilha da nuvem: formato novo (JSON string) ou legado (objeto). */
+  function hydrateSheetClonesFromCloudDoc(doc) {
+    if (!doc || typeof doc !== 'object') return;
+    if (doc.sheetClonesJson && typeof doc.sheetClonesJson === 'string') {
+      try {
+        const p = JSON.parse(doc.sheetClonesJson);
+        if (p && typeof p === 'object') doc.sheetClones = p;
+      } catch (e) {
+        doc.sheetClones = {};
+      }
+      delete doc.sheetClonesJson;
+    }
+    if (doc.sheetOrderEnc && typeof doc.sheetOrderEnc === 'string') {
+      try {
+        doc.sheetOrder = JSON.parse(doc.sheetOrderEnc);
+      } catch (e) {}
+      delete doc.sheetOrderEnc;
+    }
+    if (doc.sheetClones) doc.sheetClones = sheetClonesFromFirestore(doc.sheetClones);
+    else doc.sheetClones = {};
+  }
+
   function updateSyncUI(status) {
     const dot = document.getElementById('syncDot');
     const label = document.getElementById('syncLabel');
@@ -5120,7 +5142,7 @@ const app = new NazaFieldPro();
 
   async function applyCloudPayload(cloudData, localData) {
     const merged = JSON.parse(JSON.stringify(cloudData));
-    if (merged.sheetClones) merged.sheetClones = sheetClonesFromFirestore(merged.sheetClones);
+    hydrateSheetClonesFromCloudDoc(merged);
     if (!merged.lastSync) merged.lastSync = Date.now();
     const lfAll = localData && localData.frentes ? localData.frentes : [];
     merged.frentes = mergeFrentesUnion(merged.frentes || [], lfAll);
@@ -5170,6 +5192,44 @@ const app = new NazaFieldPro();
 
   window.cloudSync = {
     get applyingRemote() { return applyingRemote; },
+
+    cleanForFirebase(input) {
+      const clone = JSON.parse(JSON.stringify(input || {}));
+      const seen = new WeakMap();
+
+      const clean = (v) => {
+        if (v === null) return null;
+        const t = typeof v;
+        if (t === 'string' || t === 'number' || t === 'boolean') return v;
+        if (t !== 'object') return null;
+
+        if (Array.isArray(v)) {
+          // Firestore não aceita array dentro de array em nenhuma profundidade.
+          return v.map((it) => {
+            if (Array.isArray(it)) return JSON.stringify(it);
+            return clean(it);
+          });
+        }
+
+        if (seen.has(v)) return seen.get(v);
+        const out = {};
+        seen.set(v, out);
+        Object.keys(v).forEach((k) => {
+          const cv = v[k];
+          out[k] = clean(cv);
+        });
+        return out;
+      };
+
+      // Normalizações conhecidas (evita doc gigante + nested arrays).
+      clone.frentes = (clone.frentes || []).map((f) => {
+        const ff = (f && typeof f === 'object' && !Array.isArray(f)) ? f : {};
+        const fotos = Array.isArray(ff.fotos) ? ff.fotos : [];
+        return { ...ff, fotosCount: fotos.length, fotos: [] };
+      });
+
+      return clean(clone);
+    },
 
     stopSync() {
       if (snapshotUnsub) {
@@ -5295,22 +5355,21 @@ const app = new NazaFieldPro();
           if (!data) { updateSyncUI('online'); return; }
         }
 
-        const cloudData = JSON.parse(JSON.stringify(data));
+        const cloudData = this.cleanForFirebase(data);
         delete cloudData._forceEmptyFrentesPush;
-        if (cloudData.sheetClones) cloudData.sheetClones = sheetClonesToFirestore(cloudData.sheetClones);
-        // Firestore: não envia binário das fotos (evita doc gigante); só fotosCount. Imagens ficam no aparelho.
-        if (cloudData.frentes) {
-          cloudData.frentes.forEach(f => {
-            if (f.fotos && f.fotos.length > 0) {
-              f.fotosCount = f.fotos.length;
-              f.fotos = [];
-            }
-          });
-        }
+        const sheetsObj = cloudData.sheetClones || {};
+        const orderArr = cloudData.sheetOrder || [];
+        delete cloudData.sheetClones;
+        delete cloudData.sheetOrder;
+        cloudData.sheetClonesJson = JSON.stringify(sheetsObj);
+        cloudData.sheetOrderEnc = JSON.stringify(orderArr);
         const ts = Date.now();
         cloudData.lastSync = ts;
         cloudData.cloudSavedAt = ts;
         cloudData.deviceId = this.getDeviceId();
+
+        const FieldValue = firebase.firestore.FieldValue;
+        cloudData.sheetClones = FieldValue.delete();
 
         await ref.set(cloudData, { merge: true });
         lastAppliedCloudSync = ts;
@@ -5602,7 +5661,9 @@ const app = new NazaFieldPro();
 
 <script id="service-worker-register">
 // Register Service Worker for offline capability
-if ('serviceWorker' in navigator) {
+const _nazaHost = (typeof location !== 'undefined' && location.hostname) ? location.hostname : '';
+const _nazaSkipBlobSW = /\.github\.io$/i.test(_nazaHost) || location.protocol === 'file:';
+if ('serviceWorker' in navigator && !_nazaSkipBlobSW) {
   const swCode = `
     const CACHE_NAME = 'naza-field-pro-v7';
     const CDN_URLS = [
@@ -5682,9 +5743,7 @@ if ('serviceWorker' in navigator) {
   const swUrl = URL.createObjectURL(blob);
   navigator.serviceWorker.register(swUrl, {scope: '/'}).then(reg => {
     console.log('Service Worker registrado para modo offline');
-  }).catch(err => {
-    console.warn('SW registration failed (normal em file://):', err);
-  });
+  }).catch(() => {});
 }
 
 // Connectivity monitoring
