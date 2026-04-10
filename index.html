@@ -4517,6 +4517,10 @@ const app = new NazaFieldPro();
 .report-page .routing-report-wrap .sheet-route-table{font-size:11px}
 .report-page .routing-report-wrap .sheet-route-table th,
 .report-page .routing-report-wrap .sheet-route-table td{padding:8px 6px}
+.report-page .recon-apoio-stack{display:grid;grid-template-columns:1fr;gap:12px}
+.report-page .recon-apoio-stack .chart-wrap{height:250px!important}
+.report-page .recon-apoio-obs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.report-page .recon-apoio-obs .report-obs-box{margin-top:0}
 
 .simulation-summary-stack {
   display:grid;
@@ -4539,6 +4543,11 @@ const app = new NazaFieldPro();
 .simulation-summary-stack .routing-report-wrap {
   page-break-inside:avoid;
   overflow:visible;
+}
+
+@media (min-width: 900px){
+  .report-page .simulation-summary-stack{grid-template-columns:0.9fr 1.1fr;align-items:start}
+  .report-page .recon-apoio-obs{grid-template-columns:1fr 1fr}
 }
 </style>
 <script id="v5-report-simulation-script">
@@ -4599,18 +4608,16 @@ const app = new NazaFieldPro();
           <section class="report-page">
             <div class="rp-header"><div>RECONCILIAÇÃO – REGISTRO DE CAMPO</div><div class="brand">SAMARCO</div></div>
             <div class="rp-body">
-              <div class="report-metrics">
-                <div class="report-metric-mini">
-                  <table>
-                    <tr><th>Usina 2 (obs)</th><td>${this.escapeHtml(obsU2 || '-')}</td></tr>
-                    <tr><th>Usina 3 (obs)</th><td>${this.escapeHtml(obsU3 || '-')}</td></tr>
-                  </table>
-                  <div class="metric-mini-note">As observações e teores da Reconciliação são salvos localmente e sincronizados quando houver internet, refletindo em simulação e no relatório.</div>
-                </div>
+              <div class="recon-apoio-stack">
                 <div class="chart-panel">
                   <div class="chart-title">Consolidado (Fe / Pc / PPC)</div>
-                  <div class="chart-wrap" style="height:210px"><canvas id="chart-recon-apoio-report"></canvas></div>
+                  <div class="chart-wrap"><canvas id="chart-recon-apoio-report"></canvas></div>
                 </div>
+                <div class="recon-apoio-obs">
+                  <div class="report-obs-box"><strong>Usina 2 (obs)</strong><div style="margin-top:6px;white-space:pre-wrap">${this.escapeHtml(obsU2 || '-')}</div></div>
+                  <div class="report-obs-box"><strong>Usina 3 (obs)</strong><div style="margin-top:6px;white-space:pre-wrap">${this.escapeHtml(obsU3 || '-')}</div></div>
+                </div>
+                <div class="metric-mini-note">As observações e teores da Reconciliação são salvos localmente e sincronizados quando houver internet, refletindo em simulação e no relatório.</div>
               </div>
             </div>
             <div class="rp-page-no">${nextPageNo++}</div>
