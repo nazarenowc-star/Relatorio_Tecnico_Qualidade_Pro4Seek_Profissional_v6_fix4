@@ -4164,6 +4164,22 @@ const app = new NazaFieldPro();
       el.addEventListener('input', sync);
       el.addEventListener('blur', sync);
     });
+
+    // Observações da Reconciliação no slide final (editável e sincroniza PC↔celular)
+    document.querySelectorAll('.report-recon-obs[data-usina]').forEach(el => {
+      if (el.dataset.bound === '1') return;
+      el.dataset.bound = '1';
+      const sync = () => {
+        const usina = el.dataset.usina;
+        if (!usina) return;
+        this.data.reconciliacao = this.data.reconciliacao || {};
+        this.data.reconciliacao[usina] = this.data.reconciliacao[usina] || {};
+        this.data.reconciliacao[usina].obs = (el.innerText || '').trim();
+        this.saveData();
+      };
+      el.addEventListener('input', sync);
+      el.addEventListener('blur', sync);
+    });
   };
 
   app.renderFrontSectionPage = function(section, pageNo) {
@@ -4614,8 +4630,14 @@ const app = new NazaFieldPro();
                   <div class="chart-wrap"><canvas id="chart-recon-apoio-report"></canvas></div>
                 </div>
                 <div class="recon-apoio-obs">
-                  <div class="report-obs-box"><strong>Usina 2 (obs)</strong><div style="margin-top:6px;white-space:pre-wrap">${this.escapeHtml(obsU2 || '-')}</div></div>
-                  <div class="report-obs-box"><strong>Usina 3 (obs)</strong><div style="margin-top:6px;white-space:pre-wrap">${this.escapeHtml(obsU3 || '-')}</div></div>
+                  <div class="report-obs-box">
+                    <strong>Usina 2 (obs)</strong>
+                    <div class="report-recon-obs" data-usina="u2" contenteditable="true" spellcheck="false" style="margin-top:6px;white-space:pre-wrap;min-height:28px">${this.escapeHtml(obsU2 || '')}</div>
+                  </div>
+                  <div class="report-obs-box">
+                    <strong>Usina 3 (obs)</strong>
+                    <div class="report-recon-obs" data-usina="u3" contenteditable="true" spellcheck="false" style="margin-top:6px;white-space:pre-wrap;min-height:28px">${this.escapeHtml(obsU3 || '')}</div>
+                  </div>
                 </div>
                 <div class="metric-mini-note">As observações e teores da Reconciliação são salvos localmente e sincronizados quando houver internet, refletindo em simulação e no relatório.</div>
               </div>
