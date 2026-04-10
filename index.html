@@ -4912,6 +4912,133 @@ const app = new NazaFieldPro();
     return [...map.values()];
   }
 
+  function retomadaKey(r) {
+    return String(r && r.origem || '').trim().toUpperCase();
+  }
+
+  function mergeRetomadasUnion(cloudR, localR) {
+    const map = new Map();
+    const t = (r) => {
+      const d = r && (r.data || r.updatedAt);
+      const x = d ? new Date(d).getTime() : 0;
+      return Number.isFinite(x) ? x : 0;
+    };
+    const upsert = (r) => {
+      const k = retomadaKey(r);
+      if (!k) return;
+      if (!map.has(k)) { map.set(k, { ...r }); return; }
+      const cur = map.get(k);
+      if (t(r) > t(cur)) map.set(k, { ...cur, ...r });
+      else if (t(r) < t(cur)) map.set(k, { ...r, ...cur });
+      else map.set(k, { ...cur, ...r });
+    };
+    (cloudR || []).forEach(upsert);
+    (localR || []).forEach(upsert);
+    return [...map.values()];
+  }
+
+  function mergeReconciliacaoLocalPrefer(localR, cloudR) {
+    const base = JSON.parse(JSON.stringify(cloudR || {}));
+    if (!localR) return base;
+    ['u2', 'u3'].forEach((u) => {
+      if (!localR[u]) return;
+      if (!base[u]) base[u] = {};
+      Object.keys(localR[u]).forEach((tipo) => {
+        const L = localR[u][tipo];
+        const C = base[u][tipo] || {};
+        if (!L || typeof L !== 'object') return;
+        if (!base[u][tipo]) base[u][tipo] = {};
+        ['plan', 'real'].forEach((f) => {
+          if (Object.prototype.hasOwnProperty.call(L, f)) {
+            const lv = L[f];
+            if (lv !== undefined && lv !== null && lv !== '') base[u][tipo][f] = lv;
+            else if (C[f] !== undefined) base[u][tipo][f] = C[f];
+          } else if (C[f] !== undefined) base[u][tipo][f] = C[f];
+        });
+        if (L.unit != null && L.unit !== '') base[u][tipo].unit = L.unit;
+        else if (C.unit != null) base[u][tipo].unit = C.unit;
+      });
+    });
+    return base;
+  }
+
+  function mergeSheetRows(cloudRows, localRows) {
+    const maxW = Math.max(
+      1,
+      ...((cloudRows || []).map((r) => (r && r.length) || 0)),
+      ...((localRows || []).map((r) => (r && r.length) || 0))
+    );
+    const header = [];
+    for (let c = 0; c < maxW; c++) {
+      const lv = localRows[0] && localRows[0][c];
+      const cv = cloudRows[0] && cloudRows[0][c];
+      const lEmpty = lv === '' || lv == null || lv === undefined;
+      const cEmpty = cv === '' || cv == null || cv === undefined;
+      if (!lEmpty) header[c] = lv;
+      else if (!cEmpty) header[c] = cv;
+      else header[c] = '';
+    }
+    const map = new Map();
+    const rowSig = (row) => {
+      if (!row || !row.length) return '';
+      return [0, 1, 2].map((i) => String(row[i] ?? '').trim().toUpperCase()).join('|');
+    };
+    const pad = (row) => {
+      const o = [];
+      for (let i = 0; i < maxW; i++) o[i] = row && row[i] !== undefined ? row[i] : '';
+      return o;
+    };
+    const mergeCells = (cloudRow, localRow) => {
+      const len = Math.max((cloudRow && cloudRow.length) || 0, (localRow && localRow.length) || 0, maxW);
+      const o = [];
+      for (let i = 0; i < len; i++) {
+        const lv = localRow && localRow[i];
+        const cv = cloudRow && cloudRow[i];
+        const lEmpty = lv === '' || lv == null || lv === undefined;
+        const cEmpty = cv === '' || cv == null || cv === undefined;
+        if (!lEmpty) o[i] = lv;
+        else if (!cEmpty) o[i] = cv;
+        else o[i] = '';
+      }
+      return o;
+    };
+    const add = (rows, isLocal) => {
+      for (let r = 1; r < (rows || []).length; r++) {
+        const row = rows[r];
+        if (!row) continue;
+        const sig = rowSig(row);
+        if (!sig || sig === '|||') continue;
+        const nr = pad(row);
+        if (!map.has(sig)) map.set(sig, nr);
+        else if (isLocal) map.set(sig, mergeCells(map.get(sig), nr));
+      }
+    };
+    add(cloudRows, false);
+    add(localRows, true);
+    return [pad(header), ...[...map.values()].map((r) => pad(r))];
+  }
+
+  function mergeSheetClones(cloudSc, localSc) {
+    const cloud = cloudSc || {};
+    const local = localSc || {};
+    const names = new Set([...Object.keys(cloud), ...Object.keys(local)]);
+    const out = {};
+    names.forEach((name) => {
+      const cr = cloud[name];
+      const lr = local[name];
+      if (!lr || !lr.length) {
+        out[name] = cr && cr.length ? JSON.parse(JSON.stringify(cr)) : lr || [[]];
+        return;
+      }
+      if (!cr || !cr.length) {
+        out[name] = JSON.parse(JSON.stringify(lr));
+        return;
+      }
+      out[name] = mergeSheetRows(cr, lr);
+    });
+    return out;
+  }
+
   function shouldApplyCloud(cloudData, localData, opts) {
     if (!cloudData) return false;
     const ct = cloudTimestamp(cloudData);
@@ -4938,6 +5065,23 @@ const app = new NazaFieldPro();
         return cf;
       });
     }
+    if (localData) {
+      merged.retomadas = mergeRetomadasUnion(merged.retomadas || [], localData.retomadas || []);
+      merged.reconciliacao = mergeReconciliacaoLocalPrefer(localData.reconciliacao, merged.reconciliacao);
+      merged.sheetClones = mergeSheetClones(merged.sheetClones, localData.sheetClones);
+      const lo = Array.isArray(localData.sheetOrder) ? localData.sheetOrder : [];
+      const mo = Array.isArray(merged.sheetOrder) ? merged.sheetOrder : [];
+      merged.sheetOrder = [...new Set([...lo, ...mo])];
+      if (localData.sheetActive && merged.sheetClones && merged.sheetClones[localData.sheetActive]) {
+        merged.sheetActive = localData.sheetActive;
+      }
+      if (localData.simulacao && typeof localData.simulacao === 'object') {
+        merged.simulacao = { ...(merged.simulacao || {}), ...localData.simulacao };
+      }
+      if (localData.config && typeof localData.config === 'object') {
+        merged.config = { ...(merged.config || {}), ...localData.config };
+      }
+    }
     lastAppliedCloudSync = Math.max(lastAppliedCloudSync, cloudTimestamp(cloudData) || Date.now());
     applyingRemote = true;
     try {
@@ -4945,6 +5089,9 @@ const app = new NazaFieldPro();
       if (window.app) {
         app.data = { ...app.data, ...merged };
         app.updateUI();
+        try {
+          if (typeof app.loadReconciliationFieldsToScreen === 'function') app.loadReconciliationFieldsToScreen();
+        } catch (e) {}
       }
       console.log('☁️ Dados da nuvem aplicados (sync v2)');
     } finally {
