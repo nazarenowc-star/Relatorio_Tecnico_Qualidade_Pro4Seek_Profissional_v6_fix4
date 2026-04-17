@@ -9,8 +9,60 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Chart.js -->
+    <!-- Chart.js + rótulos nos gráficos (PDF/tela) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script>
+    try {
+      if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
+        Chart.register(ChartDataLabels);
+      }
+    } catch (e) {}
+    </script>
+    <script>
+    /**
+     * NAZA_FORMULAS — mesma lógica do Excel (template de importação) e do app.
+     * Se alguém apagar fórmulas no .xlsx, o HTML recalcula com estes passos.
+     */
+    window.NAZA_FORMULAS = {
+      version: '2026-04-17',
+      description: {
+        IA: 'Índice de Aderência à massa: 100% − |Real−Plan|/Plan×100, limitado a 0–100. Se Plan≤0 → 0 (igual Excel).',
+        IC: 'Índice de Conformidade (Fe): se Fe da frente vazio, repete IA; senão 100% − |Fe−FePlan|/|FePlan|×100 (FePlan = Reconciliação U2 ou U3, linha Fe, col. B), 0–100. Unidade: se plano <1 e Fe>2, trata plano como fração (×100).'
+      },
+      excel: {
+        IA: '=IF(Planejado_t<=0,0,MIN(100,100-ABS(Realizado_t-Planejado_t)/Planejado_t*100))',
+        IC: '=IF(Fe="",IA,MAX(0,MIN(100,100-ABS(Fe-IF(OR(Usina="3",Usina="Usina 3"),Reconciliacao_U3!$B$3,Reconciliacao_U2!$B$3))/MAX(0.0001,ABS(IF(OR(Usina="3",Usina="Usina 3"),Reconciliacao_U3!$B$3,Reconciliacao_U2!$B$3)))*100))'
+      },
+      computeIAFromMassa(plan, real) {
+        const p = Number(plan);
+        const r = Number(real);
+        if (!(p > 0)) return 0;
+        const desvPct = Math.abs(Number(r) - p) / p * 100;
+        return Math.max(0, Math.min(100, 100 - desvPct));
+      },
+      resolveUsinaRef(usinaStr) {
+        const s = String(usinaStr || '').trim().toLowerCase();
+        if (s.includes('3')) return 'u3';
+        return 'u2';
+      },
+      resolveFePlan(reconciliacao, usinaStr) {
+        const u = NAZA_FORMULAS.resolveUsinaRef(usinaStr);
+        return Number(reconciliacao?.[u]?.fe?.plan ?? 0) || 0;
+      },
+      /** Fe real da frente (número); fePlan da Reconciliação; fallbackIA quando não há Fe */
+      computeICFromFe(feReal, fePlan, fallbackIA) {
+        if (feReal === null || feReal === undefined || feReal === '') return fallbackIA;
+        const fe = Number(feReal);
+        if (!Number.isFinite(fe)) return fallbackIA;
+        let fp = Number(fePlan || 0);
+        if (!(fp > 0)) return fallbackIA;
+        if (fp < 1 && Math.abs(fe) > 2) fp *= 100;
+        const errPct = Math.min(100, Math.abs(fe - fp) / Math.abs(fp) * 100);
+        return Math.max(0, Math.min(100, 100 - errPct));
+      }
+    };
+    </script>
 
     <!-- jsPDF e html2canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -283,14 +335,56 @@
         gap: 28px;
         align-items: center;
     }
+    /* A4 PAISAGEM (pré-visualização alinhada ao PDF 297×210 mm) */
     .report-page {
-        width: 794px;
-        min-height: 1123px;
+        width: 1123px;
+        min-height: 794px;
         background: #f3f4f6;
         color: #1f2937;
         position: relative;
         box-shadow: 0 16px 48px rgba(8, 32, 61, 0.18);
         overflow: hidden;
+    }
+    .report-page .rp-subtitle {
+        font-size: 11px;
+        font-weight: 700;
+        color: rgba(255,255,255,.92);
+        letter-spacing: .06em;
+        margin-top: 4px;
+        opacity: .95;
+    }
+    /* Poucas frentes na página: ocupar altura sem “encavalamento” */
+    .report-page.report-page--sparse .rp-body,
+    .report-page.report-page--sparse .rp-body.report-body--fill {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(794px - 52px);
+        box-sizing: border-box;
+    }
+    .report-page.report-page--sparse .report-metrics {
+        grid-template-columns: 160px 1fr;
+        align-items: stretch;
+        flex: 0 0 auto;
+    }
+    .report-page.report-page--sparse .chart-panel {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+    }
+    .report-page.report-page--sparse .chart-wrap {
+        flex: 1 1 auto;
+        height: auto !important;
+        min-height: 280px;
+        max-height: 480px;
+    }
+    .report-page.report-page--sparse .report-table {
+        flex: 0 0 auto;
+    }
+    @media print {
+        @page { size: A4 landscape; margin: 10mm; }
+        .report-book-shell { background: #fff !important; padding: 0 !important; }
+        .report-page { box-shadow: none !important; break-after: page; page-break-after: always; }
     }
     .report-page .rp-header {
         background: #004f86;
@@ -964,12 +1058,6 @@
                     <button onclick="app.exportJSON()" class="btn-primary py-4 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-800 border-purple-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>EXPORTAR JSON</button>
                     <button onclick="app.compartilharWhatsApp()" class="btn-success py-4 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-800 border-green-400"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>WHATSAPP</button>
                 </div>
-                <p class="text-sm text-white/70 mt-4 mb-2">Backup completo (fotos em base64, planilhas, simulação, reconciliação). Use para copiar tudo entre PC e celular; depois use ENVIAR NUVEM se quiser sincronizar metadados na nuvem.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button type="button" onclick="app.exportBackupCompleto()" class="py-4 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-800 text-white border-2 border-amber-400 shadow-lg" title="Inclui todas as frentes com fotos, retomadas, planilhas e configurações">EXPORTAR BACKUP COMPLETO</button>
-                    <button type="button" onclick="app.triggerImportBackup()" class="py-4 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-slate-600 to-slate-800 text-white border-2 border-slate-400 shadow-lg" title="Substitui os dados locais pelo arquivo de backup">IMPORTAR BACKUP</button>
-                </div>
-                <input type="file" id="backupFileInput" accept=".json,application/json" class="hidden" onchange="app.importBackupFromFileInput(this)">
             </div>
         </section>
     </main>
@@ -1126,9 +1214,7 @@ class NazaFieldPro {
           const pcSrc = origemTeor(f, usinaRef, 'pc');
           const ppcSrc = origemTeor(f, usinaRef, 'ppc');
 
-          const novaFrenteBadges = f.criadaNova ? `<span class="inline-flex items-center gap-1 flex-wrap">${typeof app.renderFrontNewBadge === 'function' ? app.renderFrontNewBadge(f) : '<span class="text-xs font-black text-purple-200">Nova Frente</span>'}</span>` : '';
-          const cardNovaClass = f.criadaNova ? ' ring-2 ring-purple-400 ring-offset-2 ring-offset-naza-dark/30' : '';
-          return `<div class="glass-card ${statusColors[f.status]} rounded-xl p-4 cursor-pointer transform transition-all hover:scale-[1.02]${cardNovaClass}" onclick="app.editFrente(${i})"><div class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5 accent-blue-500" data-frente-idx="${i}" onclick="event.stopPropagation()"><div class="flex-1"><div class="flex items-center gap-2 mb-1 flex-wrap"><h4 class="font-bold text-white text-lg">${f.codigo}</h4>${novaFrenteBadges}${hasFotos ? `<span class="bg-naza-success text-white text-xs px-2 py-1 rounded-full">${f.fotos.length} foto(s)</span>` : ''}</div><p class="text-naza-accent text-sm font-semibold">Destino: ${f.destino || '—'}</p><p class="text-white/70 text-xs mt-1"><strong>Fe</strong> ${feTxt} <span class="text-white/50">(${feSrc})</span> &nbsp; <strong>Pc</strong> ${pcTxt} <span class="text-white/50">(${pcSrc})</span> &nbsp; <strong>PPC</strong> ${ppcTxt} <span class="text-white/50">(${ppcSrc})</span></p>${f.obs ? `<p class="text-white/60 text-xs mt-1 line-clamp-2">${f.obs}</p>` : ''}</div><div class="text-right ml-4"><span class="inline-block px-3 py-1 rounded-full text-xs font-bold ${f.status === 'concluida' ? 'bg-naza-success text-white' : f.status === 'bloqueada' ? 'bg-naza-danger text-white' : 'bg-naza-warning text-naza-dark'} mb-2">${statusLabels[f.status]}</span><div class="text-sm"><p class="text-white/70">Plan: <span class="text-white font-bold">${parseFloat(f.planejado).toFixed(2)}t</span></p><p class="text-naza-success">Real: <span class="font-bold">${parseFloat(f.realizado).toFixed(2)}t</span></p>${f.planejado > 0 ? `<p class="text-xs ${desvio >= 0 ? 'text-naza-success' : 'text-naza-warning'}">${desvio >= 0 ? '+' : ''}${desvio}%</p>` : ''}</div></div></div></div>`;
+          return `<div class="glass-card ${statusColors[f.status]} rounded-xl p-4 cursor-pointer transform transition-all hover:scale-[1.02]" onclick="app.editFrente(${i})"><div class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5 accent-blue-500" data-frente-idx="${i}" onclick="event.stopPropagation()"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-white text-lg">${f.codigo}</h4>${hasFotos ? `<span class="bg-naza-success text-white text-xs px-2 py-1 rounded-full">${f.fotos.length} foto(s)</span>` : ''}</div><p class="text-naza-accent text-sm">${f.destino || 'Sem destino'}</p><p class="text-white/70 text-xs mt-1"><strong>Fe</strong> ${feTxt} <span class="text-white/50">(${feSrc})</span> &nbsp; <strong>Pc</strong> ${pcTxt} <span class="text-white/50">(${pcSrc})</span> &nbsp; <strong>PPC</strong> ${ppcTxt} <span class="text-white/50">(${ppcSrc})</span></p>${f.obs ? `<p class="text-white/60 text-xs mt-1 line-clamp-2">${f.obs}</p>` : ''}</div><div class="text-right ml-4"><span class="inline-block px-3 py-1 rounded-full text-xs font-bold ${f.status === 'concluida' ? 'bg-naza-success text-white' : f.status === 'bloqueada' ? 'bg-naza-danger text-white' : 'bg-naza-warning text-naza-dark'} mb-2">${statusLabels[f.status]}</span><div class="text-sm"><p class="text-white/70">Plan: <span class="text-white font-bold">${parseFloat(f.planejado).toFixed(2)}t</span></p><p class="text-naza-success">Real: <span class="font-bold">${parseFloat(f.realizado).toFixed(2)}t</span></p>${f.planejado > 0 ? `<p class="text-xs ${desvio >= 0 ? 'text-naza-success' : 'text-naza-warning'}">${desvio >= 0 ? '+' : ''}${desvio}%</p>` : ''}</div></div></div></div>`;
         }).join('');
     }
 
@@ -1206,7 +1292,6 @@ class NazaFieldPro {
               rowIndex: null
             };
             this.data.frentes.push(nova);
-            if (typeof this.assignSheetForNewFront === 'function') this.assignSheetForNewFront(nova);
             this.saveData();
             this.updateUI();
             this.closeModalFrente();
@@ -1530,133 +1615,6 @@ class NazaFieldPro {
     }
     exportExcel() { this.showToast('Excel exportado!'); }
     exportJSON() { const dataStr = JSON.stringify(this.data, null, 2); const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `NAZA_Dados_${new Date().toISOString().split('T')[0]}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); this.showToast('JSON exportado!'); }
-    exportBackupCompleto() {
-        try {
-            const rd = document.getElementById('reportDate');
-            const wrapper = {
-                nazaBackup: true,
-                backupVersion: 1,
-                exportedAt: new Date().toISOString(),
-                uiReportDate: rd ? rd.value : '',
-                data: JSON.parse(JSON.stringify(this.data))
-            };
-            const dataStr = JSON.stringify(wrapper);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `NAZA_Backup_Completo_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            this.showToast('Backup completo exportado (fotos e planilhas inclusos).');
-        } catch (e) {
-            this.showToast('Erro ao exportar backup: ' + e.message, 'error');
-        }
-    }
-    triggerImportBackup() {
-        const input = document.getElementById('backupFileInput');
-        if (input) { input.value = ''; input.click(); }
-    }
-    importBackupFromFileInput(input) {
-        const file = input && input.files && input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            try {
-                const parsed = JSON.parse(reader.result);
-                let inner = null;
-                let uiReportDate = '';
-                if (parsed && parsed.nazaBackup && parsed.data && typeof parsed.data === 'object') {
-                    inner = parsed.data;
-                    uiReportDate = parsed.uiReportDate || '';
-                } else if (parsed && typeof parsed === 'object' && (Array.isArray(parsed.frentes) || parsed.config != null || parsed.reconciliacao != null || parsed.sheetClones != null)) {
-                    inner = parsed;
-                    uiReportDate = parsed.uiReportDate || '';
-                }
-                if (!inner) {
-                    this.showToast('Arquivo não é um backup válido.', 'error');
-                    return;
-                }
-                if (!confirm('Substituir todos os dados atuais pelos dados deste backup? (frentes, fotos, planilhas, reconciliação, retomadas)')) return;
-                this.applyImportedBackup(inner, uiReportDate);
-                this.showToast('Backup importado com sucesso!');
-            } catch (err) {
-                this.showToast('Erro ao ler backup: ' + err.message, 'error');
-            }
-        };
-        reader.onerror = () => this.showToast('Falha ao ler o arquivo.', 'error');
-        reader.readAsText(file, 'UTF-8');
-    }
-    applyImportedBackup(incoming, uiReportDate) {
-        const shell = {
-            frentes: [],
-            retomadas: [],
-            config: { tecnico: null, turno: 'matutino', periodo: 'manha' },
-            reconciliacao: {
-                u2: { rom: { plan: 0, real: 0 }, fe: { plan: 0, real: 0 }, ppc: { plan: 0, real: 0 } },
-                u3: { rom: { plan: 0, real: 0 }, fe: { plan: 0, real: 0 }, ppc: { plan: 0, real: 0 } }
-            }
-        };
-        const mergeUsina = (def, inc) => {
-            if (!inc || typeof inc !== 'object') return { ...def };
-            const out = { ...def, ...inc };
-            ['rom', 'fe', 'ppc', 'pc', 'ppcc'].forEach(m => {
-                if (inc[m] && typeof inc[m] === 'object') out[m] = { ...(def[m] || { plan: 0, real: 0 }), ...inc[m] };
-            });
-            return out;
-        };
-        const merged = {
-            ...shell,
-            ...incoming,
-            frentes: Array.isArray(incoming.frentes) ? incoming.frentes : [],
-            retomadas: Array.isArray(incoming.retomadas) ? incoming.retomadas : [],
-            config: { ...shell.config, ...(incoming.config && typeof incoming.config === 'object' ? incoming.config : {}) },
-            reconciliacao: {
-                u2: mergeUsina(shell.reconciliacao.u2, incoming.reconciliacao && incoming.reconciliacao.u2),
-                u3: mergeUsina(shell.reconciliacao.u3, incoming.reconciliacao && incoming.reconciliacao.u3)
-            },
-            sheetClones: incoming.sheetClones && typeof incoming.sheetClones === 'object' ? incoming.sheetClones : {},
-            sheetOrder: Array.isArray(incoming.sheetOrder) ? incoming.sheetOrder : [],
-            sheetActive: typeof incoming.sheetActive === 'string' ? incoming.sheetActive : '',
-            simulacao: {
-                massaHora: 1800, teorHora: 41.3, horasTurno: 12, recuperacao: 96, usinaAlvo: 'Usina 2', terceiraUsina: 0,
-                ...(incoming.simulacao && typeof incoming.simulacao === 'object' ? incoming.simulacao : {})
-            }
-        };
-        if (!merged.sheetOrder.length && merged.sheetClones && typeof merged.sheetClones === 'object') merged.sheetOrder = Object.keys(merged.sheetClones);
-        if (!merged.sheetActive && merged.sheetOrder.length) merged.sheetActive = merged.sheetOrder[0];
-        const known = new Set(['frentes', 'retomadas', 'config', 'reconciliacao', 'sheetClones', 'sheetOrder', 'sheetActive', 'simulacao']);
-        Object.keys(incoming).forEach(k => { if (!known.has(k)) merged[k] = incoming[k]; });
-        this.data = merged;
-        if (uiReportDate) {
-            const rd = document.getElementById('reportDate');
-            if (rd) rd.value = uiReportDate;
-        }
-        this.saveData();
-        this.verificarConfiguracao();
-        const u2el = document.getElementById('u2_obs');
-        const u3el = document.getElementById('u3_obs');
-        if (u2el) u2el.value = (this.data.reconciliacao.u2 && this.data.reconciliacao.u2.obs) ? this.data.reconciliacao.u2.obs : '';
-        if (u3el) u3el.value = (this.data.reconciliacao.u3 && this.data.reconciliacao.u3.obs) ? this.data.reconciliacao.u3.obs : '';
-        this.updateUI();
-        try { if (typeof this.renderSheetWorkspace === 'function') this.renderSheetWorkspace(); } catch (e) {}
-        try { if (typeof this.updateCharts === 'function') this.updateCharts(); } catch (e) {}
-        try { if (typeof this.updateChartBR02 === 'function') this.updateChartBR02(); } catch (e) {}
-        const s = this.data.simulacao;
-        if (s) {
-            const setSl = (id, v) => { const el = document.getElementById(id); if (el) el.value = String(v); };
-            setSl('sliderMassa', s.massaHora ?? 1800);
-            setSl('sliderTeor', s.teorHora ?? 41.3);
-            setSl('sliderHoras', s.horasTurno ?? 12);
-            setSl('sliderRecuperacao', s.recuperacao ?? 96);
-            setSl('sliderTerceira', s.terceiraUsina ?? 0);
-            const tg = document.getElementById('toggleUsina');
-            if (tg) tg.checked = (s.usinaAlvo === 'Usina 3');
-        }
-        try { if (typeof this.updateSimulacaoEnhanced === 'function') this.updateSimulacaoEnhanced(); } catch (e) {}
-    }
     compartilharWhatsApp() { const data = document.getElementById('reportDate').value; let texto = `*NAZA FIELD PRO - Relatório ${data}*\n\n*Técnico:* ${this.data.config.tecnico || '-'}\n*Turno:* ${this.data.config.turno?.toUpperCase() || '-'}\n\n*FRENTES (${this.data.frentes.length}):*\n`; this.data.frentes.forEach(f => { const desvio = f.planejado > 0 ? ((f.realizado - f.planejado) / f.planejado * 100).toFixed(1) : 0; texto += `• ${f.codigo}: ${f.realizado}/${f.planejado}t (${desvio >= 0 ? '+' : ''}${desvio}%)\n`; }); window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank'); }
     atualizarPreviewRelatorio() { const data = document.getElementById('reportDate').value; document.getElementById('relatorioHeader').textContent = `Data: ${data} | Técnico: ${this.data.config.tecnico || '-'} | Turno: ${(this.data.config.turno || '-').toUpperCase()}`; const frentesEl = document.getElementById('relatorioFrentes'); if (this.data.frentes.length === 0) frentesEl.innerHTML = '<p class="text-gray-500">Nenhuma frente registrada</p>'; else frentesEl.innerHTML = '<div class="grid grid-cols-1 gap-2">' + this.data.frentes.map(f => { const desvio = f.planejado > 0 ? ((f.realizado - f.planejado) / f.planejado * 100).toFixed(1) : 0; return `<div class="flex justify-between p-2 bg-gray-50 rounded"><span class="font-medium">${f.codigo}</span><span class="text-sm">${f.realizado}/${f.planejado}t <span class="${desvio >= 0 ? 'text-green-600' : 'text-red-600'}">(${desvio >= 0 ? '+' : ''}${desvio}%)</span></span></div>`; }).join('') + '</div>'; const u2 = this.data.reconciliacao.u2; const u2El = document.getElementById('relatorioU2'); if (u2 && (u2.rom?.plan > 0 || u2.fe?.plan > 0 || u2.ppc?.plan > 0)) u2El.innerHTML = `<div class="p-2 bg-blue-50 rounded"><strong>ROM:</strong> ${u2.rom?.real || 0}/${u2.rom?.plan || 0}</div><div class="p-2 bg-green-50 rounded"><strong>Fe:</strong> ${u2.fe?.real || 0}/${u2.fe?.plan || 0}</div><div class="p-2 bg-purple-50 rounded"><strong>PPC:</strong> ${u2.ppc?.real || 0}/${u2.ppc?.plan || 0}</div>`; else u2El.innerHTML = '<p class="text-gray-500 col-span-3">Dados não preenchidos</p>'; const u3 = this.data.reconciliacao.u3; const u3El = document.getElementById('relatorioU3'); if (u3 && (u3.rom?.plan > 0 || u3.fe?.plan > 0 || u3.ppc?.plan > 0)) u3El.innerHTML = `<div class="p-2 bg-blue-50 rounded"><strong>ROM:</strong> ${u3.rom?.real || 0}/${u3.rom?.plan || 0}</div><div class="p-2 bg-green-50 rounded"><strong>Fe:</strong> ${u3.fe?.real || 0}/${u3.fe?.plan || 0}</div><div class="p-2 bg-purple-50 rounded"><strong>PPC:</strong> ${u3.ppc?.real || 0}/${u3.ppc?.plan || 0}</div>`; else u3El.innerHTML = '<p class="text-gray-500 col-span-3">Dados não preenchidos</p>'; const br02El = document.getElementById('relatorioBR02'); if (this.data.retomadas.length === 0) br02El.innerHTML = '<p class="text-gray-500">Nenhuma retomada registrada</p>'; else { const total = this.data.retomadas.reduce((sum, r) => sum + r.quantidade, 0); br02El.innerHTML = `<p><strong>Total retomado:</strong> ${total.toFixed(2)}t em ${this.data.retomadas.length} operações</p>`; } }
     showToast(message, type = 'success') { const toast = document.getElementById('toast'); toast.textContent = message; toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-xl font-bold hidden z-50 shadow-2xl animate-slide-up max-w-xs text-center ' + (type === 'error' ? 'bg-red-500 text-white' : 'bg-naza-success text-white'); toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 3000); }
@@ -1824,6 +1782,9 @@ const app = new NazaFieldPro();
                     const usinaIdx = this.getColumnIndex(headers, ['usina'], 5);
                     const iaIdx = this.getColumnIndex(headers, ['ia'], 6);
                     const icIdx = this.getColumnIndex(headers, ['ic'], 7);
+                    const feIdx = this.getColumnIndex(headers, ['fe', 'teor fe', 'teor'], -1);
+                    const pcIdx = this.getColumnIndex(headers, ['pc'], -1);
+                    const ppcIdx = this.getColumnIndex(headers, ['ppc'], -1);
 
                     dataRows.forEach((row, rowOffset) => {
                         const codigo = String(row[codigoIdx] || '').trim();
@@ -1833,6 +1794,7 @@ const app = new NazaFieldPro();
                         const realizado = this.toNumber(row[realIdx]);
                         const tipo = String(row[tipoIdx] || (/est/i.test(sheetName) ? 'estéril' : 'minério')).trim();
                         const usina = String(row[usinaIdx] || '').trim();
+                        const cellStr = (idx) => (idx >= 0 && row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '');
                         this.data.frentes.push({
                             codigo,
                             destino,
@@ -1840,6 +1802,9 @@ const app = new NazaFieldPro();
                             realizado,
                             tipo,
                             usina,
+                            fe: feIdx >= 0 && cellStr(feIdx) !== '' ? this.toNumber(row[feIdx]) : null,
+                            pc: pcIdx >= 0 && cellStr(pcIdx) !== '' ? this.toNumber(row[pcIdx]) : null,
+                            ppc: ppcIdx >= 0 && cellStr(ppcIdx) !== '' ? this.toNumber(row[ppcIdx]) : null,
                             ia: row[iaIdx] ? String(row[iaIdx]).trim() : null,
                             ic: row[icIdx] ? String(row[icIdx]).trim() : null,
                             status: realizado > 0 ? 'concluida' : 'pendente',
@@ -2005,16 +1970,23 @@ const app = new NazaFieldPro();
 
     app.computeIA = function(item) {
         const explicit = this.parsePercentString(item.ia);
-        if (explicit !== null) return explicit;
-        if (!item.planejado) return 0;
-        return Math.max(0, Math.min(100, (item.realizado / item.planejado) * 100));
+        if (explicit !== null) return Math.max(0, Math.min(100, explicit));
+        const F = window.NAZA_FORMULAS;
+        return F ? F.computeIAFromMassa(item.planejado, item.realizado) : 0;
     };
 
+    /** Igual à coluna IC do Excel: só Fe vs plano da Reconciliação; se Fe em branco, repete IA (col. G). */
     app.computeIC = function(item) {
         const explicit = this.parsePercentString(item.ic);
-        if (explicit !== null) return explicit;
-        if (!item.planejado) return 0;
-        return Math.max(0, Math.min(100, (item.realizado / item.planejado) * 100));
+        if (explicit !== null) return Math.max(0, Math.min(100, explicit));
+        const iaVal = this.computeIA(item);
+        const rawFe = item.fe;
+        const hasExplicitFe = rawFe !== null && rawFe !== undefined && String(rawFe).trim() !== '';
+        if (!hasExplicitFe) return iaVal;
+        const F = window.NAZA_FORMULAS;
+        if (!F) return iaVal;
+        const fePlan = F.resolveFePlan(this.data.reconciliacao, item.usina);
+        return F.computeICFromFe(rawFe, fePlan, iaVal);
     };
 
     app.buildJustification = function(item) {
@@ -2368,7 +2340,18 @@ const app = new NazaFieldPro();
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 10 } } } },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 10 } } },
+                        datalabels: {
+                            display: true,
+                            color: '#0f172a',
+                            font: { weight: '800', size: 9 },
+                            anchor: 'end',
+                            align: 'top',
+                            offset: -2,
+                            formatter: (v) => (Number(v) >= 1000 ? Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 1 }))
+                        }
+                    },
                     scales: {
                         x: { ticks: { font: { size: 9 } } },
                         y: { beginAtZero: true, ticks: { font: { size: 9 } } }
@@ -2404,7 +2387,17 @@ const app = new NazaFieldPro();
                         responsive: true,
                         maintainAspectRatio: false,
                         animation: false,
-                        plugins: { legend: { display: false } },
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                display: true,
+                                color: '#0f172a',
+                                font: { weight: '800', size: 8 },
+                                anchor: 'end',
+                                align: 'top',
+                                formatter: (v) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: decimals })
+                            }
+                        },
                         scales: {
                             x: { ticks: { font: { size: 8 } } },
                             y: {
@@ -2444,7 +2437,16 @@ const app = new NazaFieldPro();
                         maintainAspectRatio: false,
                         animation: false,
                         plugins: {
-                            legend: { position: 'bottom', labels: { font: { size: 9 } } }
+                            legend: { position: 'bottom', labels: { font: { size: 9 } } },
+                            datalabels: {
+                                display: true,
+                                color: '#334155',
+                                font: { weight: '800', size: 9 },
+                                formatter: (v, ctx) => {
+                                    const label = ctx.chart.data.labels[ctx.dataIndex] || '';
+                                    return label + '\n' + Number(v).toFixed(1) + '%';
+                                }
+                            }
                         }
                     }
                 }));
@@ -2470,7 +2472,17 @@ const app = new NazaFieldPro();
                         responsive: true,
                         maintainAspectRatio: false,
                         animation: false,
-                        plugins: { legend: { position: 'bottom', labels: { font: { size: 9 } } } },
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { size: 9 } } },
+                            datalabels: {
+                                display: true,
+                                color: '#0f172a',
+                                font: { weight: '800', size: 9 },
+                                anchor: 'end',
+                                align: 'top',
+                                formatter: (v) => Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 0 })
+                            }
+                        },
                         scales: {
                             x: { ticks: { font: { size: 9 } } },
                             y: { beginAtZero: true, ticks: { font: { size: 9 } } }
@@ -2492,7 +2504,17 @@ const app = new NazaFieldPro();
                         responsive: true,
                         maintainAspectRatio: false,
                         animation: false,
-                        plugins: { legend: { position: 'bottom', labels: { font: { size: 9 } } } },
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { size: 9 } } },
+                            datalabels: {
+                                display: true,
+                                color: '#0f172a',
+                                font: { weight: '800', size: 9 },
+                                anchor: 'center',
+                                align: 'center',
+                                formatter: (v) => Number(v).toFixed(0) + '%'
+                            }
+                        },
                         scales: {
                             x: { ticks: { font: { size: 9 } } },
                             y: { beginAtZero: true, max: 100, ticks: { callback: value => value + '%', font: { size: 9 } } }
@@ -2528,7 +2550,7 @@ const app = new NazaFieldPro();
 
         // Página azul do técnico como página 2 (antes ficava no final).
         const techPage = this.renderTechPage(2);
-        const frontPages = frontSections.map((section, index) => this.renderFrontSectionPage(section, index + 3)).join('');
+        const frontPages = frontSections.map((section, index) => this.renderFrontSectionPage(section, index + 3, index + 1, frontSections.length)).join('');
         const reconPages = this.renderReconPage('u2', frontSections.length + 3) + this.renderReconPage('u3', frontSections.length + 4);
         const retomadaPages = retomadaSections.map((section, index) => this.renderRetomadaPage(section, frontSections.length + 5 + index)).join('');
 
@@ -2543,7 +2565,7 @@ const app = new NazaFieldPro();
             await new Promise(resolve => setTimeout(resolve, 250));
 
             const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdf = new jsPDF('l', 'mm', 'a4');
             const pages = document.querySelectorAll('#reportBook .report-page');
 
             for (let i = 0; i < pages.length; i++) {
@@ -2551,11 +2573,12 @@ const app = new NazaFieldPro();
                     scale: 2,
                     useCORS: true,
                     backgroundColor: '#ffffff',
-                    logging: false
+                    logging: false,
+                    windowWidth: 1200
                 });
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
                 if (i > 0) pdf.addPage();
-                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+                pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
             }
 
             const data = document.getElementById('reportDate').value || 'Relatorio';
@@ -2585,10 +2608,10 @@ const app = new NazaFieldPro();
 }
 .field-inline-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;background:rgba(255,255,255,.12);color:#fff}
 .status-offline-badge{background:#b91c1c!important}
-.report-photo-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:10px;align-items:start}
-.report-photo-card{border:1px solid #cdd9ea;border-radius:10px;overflow:hidden;background:#fff;min-width:0;display:flex;flex-direction:column}
-.report-photo-card img{width:100%;height:auto;max-height:96px;min-height:64px;object-fit:contain;object-position:center;display:block;background:#f1f5f9}
-.report-photo-card div{padding:6px 8px;font-size:9px;line-height:1.35;color:#31435a;word-break:break-word;max-height:3.2em;overflow:hidden}
+.report-photo-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.report-photo-card{border:1px solid #cdd9ea;border-radius:10px;overflow:hidden;background:#fff}
+.report-photo-card img{width:100%;height:110px;object-fit:cover;display:block}
+.report-photo-card div{padding:6px 8px;font-size:10px;line-height:1.35;color:#31435a}
 .report-obs-box{margin-top:10px;padding:10px 12px;background:#f5f8fc;border:1px solid #dce7f4;border-radius:10px;font-size:11px;color:#243447}
 .report-obs-box strong{color:#0b2f7b}
 .chart-box.compact{padding:12px 16px}
@@ -2622,24 +2645,6 @@ const app = new NazaFieldPro();
   vertical-align:middle;
   white-space:nowrap;
 }
-.badge-front-provisoria{
-  display:inline-flex;
-  align-items:center;
-  margin-left:4px;
-  padding:2px 6px;
-  border-radius:8px;
-  background:#faf5ff;
-  color:#6b21a8;
-  border:1px solid #c4b5fd;
-  font-size:8px;
-  font-weight:900;
-  white-space:nowrap;
-}
-.sheet-tab-btn.provisional:not(.active){
-  border-color:#a855f7!important;
-  background:#faf5ff!important;
-  color:#5b21b6!important;
-}
 .sheet-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#526173}
 .sheet-meta strong{color:#173a63}
 .kpi-forecast-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
@@ -2652,7 +2657,7 @@ const app = new NazaFieldPro();
 @media (max-width: 900px){
   .kpi-forecast-grid,.kpi-form-grid,.kpi-layout{grid-template-columns:1fr}
   .report-photo-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .report-photo-card img{max-height:84px;min-height:56px}
+  .report-photo-card img{height:90px}
 }
 </style>
 
@@ -3040,8 +3045,7 @@ const app = new NazaFieldPro();
 
   app.renderFrontNewBadge = function(item) {
     if (!item || !item.criadaNova) return '';
-    const prov = item.abaProvisoria ? '<span class="badge-front-provisoria">(Aba p/Nova Frente)</span>' : '';
-    return `<span class="badge-front-new">Nova Frente</span>${prov}`;
+    return `<span class="badge-front-new">Frente nova</span>`;
   };
 
   app.clearFrontReportState = function(){
@@ -3216,108 +3220,6 @@ const app = new NazaFieldPro();
     return changed;
   };
 
-  /**
-   * Quando uma nova frente nasce por mudança de destino, escolhe a aba de planilha mais compatível
-   * ou cria "Aba_p_Nova_Frente" com cabeçalho padrão (destaque roxo).
-   */
-  app.assignSheetForNewFront = function(front) {
-    if (!front || !front.criadaNova) return;
-    const dest = String(front.destino || '').trim();
-    if (!dest) return;
-    const sheets = this.data.sheetClones || {};
-    const order = this.data.sheetOrder || [];
-    const minerio = order.filter(n => /^minerio|^minério|^esteril|^est[eé]ril/i.test(n));
-
-    const scoreSheet = (sheetName) => {
-      const rows = sheets[sheetName];
-      if (!rows || rows.length < 2) return 0;
-      const headerIdx = this.findHeaderRow(rows);
-      const headers = rows[headerIdx] || [];
-      const destIdx = this.getColumnIndex(headers, ['destino'], 1);
-      if (destIdx < 0) return 0;
-      let score = 0;
-      for (let i = headerIdx + 1; i < rows.length; i++) {
-        const d = String(rows[i][destIdx] || '').trim();
-        if (!d) continue;
-        if (d === dest) score += 50;
-        else if (dest.includes(d) || d.includes(dest)) score += 22;
-        else {
-          dest.split(/[/\s,_-]+/).filter(t => t.length > 2).forEach(t => {
-            const u = t.toUpperCase();
-            if (d.toUpperCase().includes(u)) score += 4;
-          });
-        }
-      }
-      const title = (this.sectionTitleMap && this.sectionTitleMap[sheetName]) || '';
-      dest.split(/[/\s,_-]+/).filter(t => t.length > 2).forEach(t => {
-        if (title && title.toUpperCase().includes(t.toUpperCase())) score += 10;
-      });
-      return score;
-    };
-
-    const hints = [
-      { test: /11CR12|HOPPER\s*12/i, sheet: 'Minério_Hopper12' },
-      { test: /HP19|11CR19|11CR05|11LK03|CR05/i, sheet: 'Minério_HP19_CR05' },
-      { test: /11CR03|11CR13|11CR15|HP13/i, sheet: 'Minério_HP13_CR15' },
-      { test: /estéril|esteril|NORTE|CAVA|FORRO|CINTUR/i, sheet: 'Estéril_Norte' }
-    ];
-    for (let h = 0; h < hints.length; h++) {
-      const x = hints[h];
-      if (x.test.test(dest) && sheets[x.sheet]) {
-        front.sheetName = x.sheet;
-        front.sectionKey = x.sheet;
-        front.sectionTitle = (this.sectionTitleMap && this.sectionTitleMap[x.sheet]) || x.sheet;
-        front.abaProvisoria = false;
-        return;
-      }
-    }
-
-    let best = null;
-    let bestScore = 0;
-    minerio.forEach(n => {
-      const s = scoreSheet(n);
-      if (s > bestScore) {
-        bestScore = s;
-        best = n;
-      }
-    });
-    if (best && bestScore >= 6) {
-      front.sheetName = best;
-      front.sectionKey = best;
-      front.sectionTitle = (this.sectionTitleMap && this.sectionTitleMap[best]) || best;
-      front.abaProvisoria = false;
-      return;
-    }
-    if (minerio.length === 1) {
-      const only = minerio[0];
-      front.sheetName = only;
-      front.sectionKey = only;
-      front.sectionTitle = (this.sectionTitleMap && this.sectionTitleMap[only]) || only;
-      front.abaProvisoria = false;
-      return;
-    }
-    if (best && bestScore > 0) {
-      front.sheetName = best;
-      front.sectionKey = best;
-      front.sectionTitle = (this.sectionTitleMap && this.sectionTitleMap[best]) || best;
-      front.abaProvisoria = false;
-      return;
-    }
-
-    const tabName = 'Aba_p_Nova_Frente';
-    if (!this.data.sheetClones[tabName]) {
-      this.data.sheetClones[tabName] = [['Código_Fronte', 'Destino', 'Planejado_t', 'Realizado_t', 'Tipo', 'Usina', 'IA', 'IC', 'Fe', 'Pc', 'PPC']];
-    }
-    const ord = this.data.sheetOrder || [];
-    if (!ord.includes(tabName)) {
-      this.data.sheetOrder = [...ord, tabName];
-    }
-    front.sheetName = tabName;
-    front.sectionKey = tabName;
-    front.sectionTitle = 'Nova frente — ' + dest;
-    front.abaProvisoria = true;
-  };
-
   app.renderSheetWorkspace = function(){
     this.ensureEnhancedScaffold();
     const tabs = document.getElementById('sheetTabs');
@@ -3333,13 +3235,7 @@ const app = new NazaFieldPro();
       return;
     }
     if (!this.data.sheetActive || !sheets[this.data.sheetActive]) this.data.sheetActive = order[0];
-    tabs.innerHTML = order.map(name => {
-      const prov = /^Aba_p_Nova_Frente$/i.test(name) || /^NovaFrente_/i.test(name);
-      const active = name === this.data.sheetActive ? 'active' : '';
-      const pclass = prov ? ' provisional' : '';
-      const label = prov ? name + ' \u26D1' : name;
-      return `<button type="button" class="sheet-tab-btn ${active}${pclass}" onclick="app.setActiveSheet('${String(name).replace(/'/g, "\\'")}')">${label}</button>`;
-    }).join('');
+    tabs.innerHTML = order.map(name=>`<button class="sheet-tab-btn ${name===this.data.sheetActive?'active':''}" onclick="app.setActiveSheet('${String(name).replace(/'/g,"\\'")}')">${name}</button>`).join('');
     const rows = sheets[this.data.sheetActive] || [['']];
     const headerIdx = this.findHeaderRow(rows);
     const maxCols = Math.max(...rows.map(r=>r.length), 1);
@@ -3416,11 +3312,15 @@ const app = new NazaFieldPro();
       const usinaIdx = this.getColumnIndex(headers, ['usina'], 5);
       const iaIdx = this.getColumnIndex(headers, ['ia'], 6);
       const icIdx = this.getColumnIndex(headers, ['ic'], 7);
+      const feIdx = this.getColumnIndex(headers, ['fe', 'teor fe', 'teor'], -1);
+      const pcIdx = this.getColumnIndex(headers, ['pc'], -1);
+      const ppcIdx = this.getColumnIndex(headers, ['ppc'], -1);
       this.data.frentes = this.data.frentes.filter(f => f.sheetName !== sheetName);
       dataRows.forEach((row, rowOffset)=>{
         const codigo = String(row[codeIdx] || '').trim();
         const destino = String(row[destIdx] || '').trim();
         if (!codigo || !destino) return;
+        const cellStr = (idx) => (idx >= 0 && row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '');
         this.data.frentes.push({
           codigo,
           destino,
@@ -3428,6 +3328,9 @@ const app = new NazaFieldPro();
           realizado: this.toNumber(row[realIdx]),
           tipo: String(row[tipoIdx] || (/est/i.test(sheetName)?'estéril':'minério')).trim(),
           usina: String(row[usinaIdx] || '').trim(),
+          fe: feIdx >= 0 && cellStr(feIdx) !== '' ? this.toNumber(row[feIdx]) : null,
+          pc: pcIdx >= 0 && cellStr(pcIdx) !== '' ? this.toNumber(row[pcIdx]) : null,
+          ppc: ppcIdx >= 0 && cellStr(ppcIdx) !== '' ? this.toNumber(row[ppcIdx]) : null,
           ia: row[iaIdx] ? String(row[iaIdx]).trim() : null,
           ic: row[icIdx] ? String(row[icIdx]).trim() : null,
           status: this.toNumber(row[realIdx]) > 0 ? 'concluida' : 'pendente',
@@ -3595,12 +3498,12 @@ const app = new NazaFieldPro();
     `).join('');
 
     const mediaWithPhotos = section.items.filter(item => Array.isArray(item.fotos) && item.fotos.length);
-    const photoBlocks = mediaWithPhotos.slice(0, 3).map(item => `
+    const photoBlocks = mediaWithPhotos.slice(0, 2).map(item => `
       <div class="report-obs-box">
         <strong>${item.codigo}</strong><br>
         ${item.obs ? `Observação de campo: ${item.obs}` : 'Sem observação complementar registrada.'}
         <div class="report-photo-strip">
-          ${item.fotos.slice(0, 6).map(f=>`<div class="report-photo-card"><img src="${(f && f.data) ? f.data : ''}" alt="Foto da frente"><div>${item.justificativa || item.obs || this.buildJustification(item)}</div></div>`).join('')}
+          ${item.fotos.slice(0, 4).map(f=>`<div class="report-photo-card"><img src="${f.data}" alt="Foto da frente"><div>${item.justificativa || item.obs || this.buildJustification(item)}</div></div>`).join('')}
         </div>
       </div>`).join('');
 
@@ -3726,64 +3629,17 @@ const app = new NazaFieldPro();
 
   app.exportPDF = async function(){
     try {
-      if (!window.jspdf || !window.jspdf.jsPDF) {
-        this.showToast('Biblioteca PDF não carregou (verifique a internet).', 'error');
-        return;
-      }
-      if (typeof html2canvas !== 'function') {
-        this.showToast('html2canvas não disponível.', 'error');
-        return;
-      }
       this.atualizarPreviewRelatorio();
       this.showToast('Gerando PDF profissional...');
-      await new Promise(resolve => setTimeout(resolve, 450));
-      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
+      await new Promise(resolve => setTimeout(resolve, 300));
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p','mm','a4');
+      const pdf = new jsPDF('l','mm','a4');
       const pages = document.querySelectorAll('#reportBook .report-page');
-      if (!pages || pages.length === 0) {
-        this.showToast('Nenhuma página para exportar. Abra a aba Relatório e aguarde o preview.', 'error');
-        return;
-      }
-      const MAX_PX = 8000;
-      for (let i = 0; i < pages.length; i++) {
-        const el = pages[i];
-        const pw = el.offsetWidth || 794;
-        const ph = Math.max(el.scrollHeight, el.offsetHeight, 1123) || 1123;
-        let scale = Math.min(2.4, MAX_PX / pw, MAX_PX / ph);
-        scale = Math.max(1, scale);
-        let canvas;
-        try {
-          canvas = await html2canvas(el, {
-            scale,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            foreignObjectRendering: false,
-            imageTimeout: 20000
-          });
-        } catch (e1) {
-          console.warn('html2canvas (scale ' + scale + '), tentando escala 1:', e1);
-          canvas = await html2canvas(el, {
-            scale: 1,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            foreignObjectRendering: false,
-            imageTimeout: 20000
-          });
-        }
-        let imgData;
-        let fmt = 'JPEG';
-        try {
-          imgData = canvas.toDataURL('image/jpeg', 0.92);
-        } catch (e2) {
-          imgData = canvas.toDataURL('image/png');
-          fmt = 'PNG';
-        }
-        if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, fmt, 0, 0, 210, 297);
+      for (let i=0;i<pages.length;i++) {
+        const canvas = await html2canvas(pages[i], {scale:2.4, useCORS:true, backgroundColor:'#ffffff', logging:false, windowWidth: 1200});
+        const imgData = canvas.toDataURL('image/jpeg',0.98);
+        if (i>0) pdf.addPage();
+        pdf.addImage(imgData,'JPEG',0,0,297,210,undefined,'FAST');
       }
       const data = document.getElementById('reportDate').value || 'Relatorio';
       const tecnico = (this.data.config.tecnico || 'Tecnico').replace(/\s+/g,'_');
@@ -3829,7 +3685,7 @@ const app = new NazaFieldPro();
 @media (max-width:640px){.sim-grid-6{grid-template-columns:1fr}}
 .compact-chart-card{background:#fff;border:1px solid rgba(11,47,123,.12);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(11,47,123,.08)}
 .compact-chart-card h4{font-size:.95rem;font-weight:900;color:#0b2f7b;margin-bottom:8px}
-.report-empty-state{display:flex;align-items:center;justify-content:center;height:100%;min-height:900px;background:#fff;color:#0b2f7b;font-weight:800;font-size:24px}
+.report-empty-state{display:flex;align-items:center;justify-content:center;height:100%;min-height:620px;background:#fff;color:#0b2f7b;font-weight:800;font-size:24px}
 .metric-mini-note{font-size:11px;color:#64748b;margin-top:4px}
 </style>
 
@@ -3919,17 +3775,7 @@ const app = new NazaFieldPro();
     this.data.config = this.data.config || {tecnico:null,turno:'matutino',periodo:'manha'};
     this.data.reconciliacao = this.data.reconciliacao || deepClone(DEFAULT_RECON);
     this.data.sheetClones = this.data.sheetClones || {};
-    if (!Array.isArray(this.data.sheetOrder)) {
-      this.data.sheetOrder = Object.keys(this.data.sheetClones);
-    } else {
-      const seen = new Set();
-      this.data.sheetOrder = this.data.sheetOrder.filter(n => {
-        if (n == null || n === '') return false;
-        if (seen.has(n)) return false;
-        seen.add(n);
-        return true;
-      });
-    }
+    this.data.sheetOrder = Array.isArray(this.data.sheetOrder) ? this.data.sheetOrder : Object.keys(this.data.sheetClones);
     this.data.sheetActive = this.data.sheetActive || this.data.sheetOrder[0] || '';
     this.data.simulacao = Object.assign({}, DEFAULT_SIM, this.data.simulacao || {});
     this.data.desviador = Array.isArray(this.data.desviador) ? this.data.desviador : [];
@@ -4504,11 +4350,18 @@ const app = new NazaFieldPro();
     });
   };
 
-  app.renderFrontSectionPage = function(section, pageNo) {
+  app.renderFrontSectionPage = function(section, pageNo, partIndex, partTotal) {
     const totalPlan = section.items.reduce((sum, item) => sum + Number(item.planejado || 0), 0);
     const totalReal = section.items.reduce((sum, item) => sum + Number(item.realizado || 0), 0);
     const iaAvg = section.items.length ? section.items.reduce((sum, item) => sum + this.computeIA(item), 0) / section.items.length : 0;
     const icAvg = section.items.length ? section.items.reduce((sum, item) => sum + this.computeIC(item), 0) / section.items.length : 0;
+    const n = (section.items || []).length;
+    const sparse = n > 0 && n <= 12;
+    const pNum = partIndex || 1;
+    const pTot = partTotal || 1;
+    const panelSub = pTot > 1
+      ? `PAINEL DE SIMULAÇÃO (espelho) — Parte ${pNum}/${pTot}`
+      : 'PAINEL DE SIMULAÇÃO (espelho)';
 
     const rows = section.items.map(item => {
       const idx = this.findFrontIndexByIdentity(item);
@@ -4524,19 +4377,25 @@ const app = new NazaFieldPro();
     }).join('');
 
     const mediaWithPhotos = section.items.filter(item => Array.isArray(item.fotos) && item.fotos.length);
-    const photoBlocks = mediaWithPhotos.slice(0, 3).map(item => `
+    const photoBlocks = mediaWithPhotos.slice(0, 2).map(item => `
       <div class="report-obs-box">
         <strong>${item.codigo}</strong><br>
         ${item.obs ? `Observação de campo: ${item.obs}` : 'Sem observação complementar registrada.'}
         <div class="report-photo-strip">
-          ${item.fotos.slice(0, 6).map(f=>`<div class="report-photo-card"><img src="${(f && f.data) ? f.data : ''}" alt="Foto da frente"><div>${item.justificativa || item.obs || this.buildJustification(item)}</div></div>`).join('')}
+          ${item.fotos.slice(0, 4).map(f=>`<div class="report-photo-card"><img src="${f.data}" alt="Foto da frente"><div>${item.justificativa || item.obs || this.buildJustification(item)}</div></div>`).join('')}
         </div>
       </div>`).join('');
 
     return `
-      <section class="report-page">
-        <div class="rp-header"><div>${section.title}</div><div class="brand">SAMARCO</div></div>
-        <div class="rp-body">
+      <section class="report-page${sparse ? ' report-page--sparse' : ''}">
+        <div class="rp-header">
+          <div>
+            ${section.title}
+            <div class="rp-subtitle">${panelSub}</div>
+          </div>
+          <div class="brand">SAMARCO</div>
+        </div>
+        <div class="rp-body${sparse ? ' report-body--fill' : ''}">
           <div class="report-metrics">
             <div class="report-metric-mini">
               <table>
@@ -4547,11 +4406,11 @@ const app = new NazaFieldPro();
               </table>
             </div>
             <div class="chart-panel">
-              <div class="chart-title">Aderência</div>
-              <div class="chart-wrap" style="height:190px"><canvas id="chart-front-${pageNo}"></canvas></div>
+              <div class="chart-title">Aderência (planejado × realizado)</div>
+              <div class="chart-wrap"${sparse ? '' : ' style="height:190px"'}><canvas id="chart-front-${pageNo}"></canvas></div>
             </div>
           </div>
-          <div class="report-edit-note">Justificativa técnica editável diretamente na pré-visualização antes da exportação.</div>
+          <div class="report-edit-note">Justificativa técnica editável diretamente na pré-visualização antes da exportação. <strong>IA</strong> = aderência à massa planejada; <strong>IC</strong> = conformidade dos teores em relação à Reconciliação (usina).</div>
           <table class="report-table">
             <thead>
               <tr><th style="width:28%">FRENTE</th><th style="width:13%">DESTINO</th><th style="width:10%">IA (%)</th><th style="width:10%">IC (%)</th><th>JUSTIFICATIVA</th></tr>
@@ -4848,7 +4707,7 @@ const app = new NazaFieldPro();
 <style id="v5-report-simulation-layout">
 .report-page .simulation-chart-stack{display:grid;grid-template-columns:1fr;gap:12px}
 .report-page .simulation-chart-stack .chart-panel{min-height:0}
-.report-page .simulation-chart-stack .chart-wrap{height:220px!important}
+.report-page .simulation-chart-stack .chart-wrap{height:300px!important}
 .report-page .simulation-summary-stack{display:grid;grid-template-columns:1fr;gap:14px}
 .report-page .simulation-summary-stack .report-metric-mini table th{width:46%}
 .report-page .routing-report-wrap{margin-top:0}
@@ -5333,7 +5192,11 @@ const app = new NazaFieldPro();
               ]
             },
             options:{responsive:true, maintainAspectRatio:false, animation:false,
-              plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}}},
+              plugins:{
+                legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}},
+                datalabels:{display:true, color:'#0f172a', font:{weight:'800',size:8}, anchor:'end', align:'top',
+                  formatter:(v)=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:3})}
+              },
               scales:{y:{beginAtZero:true, ticks:{font:{size:9}}}, x:{ticks:{font:{size:9}}}}
             }
           }));
@@ -5349,21 +5212,52 @@ const app = new NazaFieldPro();
         const c1 = document.getElementById('chart-projecao-horaria-report');
         if (c1) {
           this.destroyChartOnCanvas(c1);
+          const lastLab = labels.length - 1;
           this.reportCharts.push(new Chart(c1, {
             data:{labels,datasets:[
               {type:'bar', label:'Massa prevista (t)', data:massSeries, backgroundColor:'#0ea5e9', borderRadius:7, yAxisID:'y'},
-              {type:'line', label:'Fe (%)', data:feSeries, borderColor:'#f59e0b', backgroundColor:'#f59e0b', yAxisID:'y1', tension:.28, pointRadius:2},
-              {type:'line', label:'Pc (%)', data:pcSeries, borderColor:'#ef4444', backgroundColor:'#ef4444', yAxisID:'y2', tension:.28, pointRadius:2},
-              {type:'line', label:'PPC (%)', data:ppcSeries, borderColor:'#22c55e', backgroundColor:'#22c55e', yAxisID:'y3', tension:.28, pointRadius:2}
+              {type:'line', label:'Fe (%)', data:feSeries, borderColor:'#f59e0b', backgroundColor:'#f59e0b', yAxisID:'y1', tension:.28, pointRadius:3},
+              {type:'line', label:'Pc (%)', data:pcSeries, borderColor:'#ef4444', backgroundColor:'#ef4444', yAxisID:'y2', tension:.28, pointRadius:3},
+              {type:'line', label:'PPC (%)', data:ppcSeries, borderColor:'#22c55e', backgroundColor:'#22c55e', yAxisID:'y3', tension:.28, pointRadius:3}
             ]},
             options:{responsive:true, maintainAspectRatio:false, animation:false,
-              plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}}},
+              layout:{padding:{bottom:18, top:8}},
+              plugins:{
+                legend:{
+                  position:'bottom',
+                  labels:{
+                    boxWidth:14,
+                    padding:14,
+                    font:{size:11, weight:'600'},
+                    color:'#0f172a'
+                  }
+                },
+                datalabels:{
+                  display:(ctx)=>{
+                    if (ctx.datasetIndex===0) return true;
+                    const di = ctx.dataIndex;
+                    return di===lastLab || di===0 || di===Math.floor(lastLab/2);
+                  },
+                  color:'#0f172a',
+                  font:{weight:'700', size:10},
+                  anchor:'end',
+                  align:'top',
+                  offset:2,
+                  clamp:true,
+                  formatter:(v,ctx)=>{
+                    const lab = ctx.dataset.label||'';
+                    if (lab.includes('Massa')) return fmt(v,0);
+                    if (lab.includes('Pc')) return Number(v).toFixed(3);
+                    return Number(v).toFixed(2);
+                  }
+                }
+              },
               scales:{
-                y:{beginAtZero:true, ticks:{font:{size:9}, callback:(v)=>fmt(v,0)}},
-                y1:{position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size:9}}},
-                y2:{position:'right', offset:true, grid:{drawOnChartArea:false}, ticks:{font:{size:8}}},
-                y3:{position:'left', offset:true, grid:{drawOnChartArea:false}, ticks:{font:{size:8}}},
-                x:{ticks:{font:{size:9}}}
+                y:{beginAtZero:true, ticks:{font:{size:11}, callback:(v)=>fmt(v,0)}},
+                y1:{position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size:11}}},
+                y2:{position:'right', offset:true, grid:{drawOnChartArea:false}, ticks:{font:{size:10}}},
+                y3:{position:'left', offset:true, grid:{drawOnChartArea:false}, ticks:{font:{size:10}}},
+                x:{ticks:{font:{size:11}, maxRotation:45, minRotation:0}}
               }
             }
           }));
@@ -5379,18 +5273,43 @@ const app = new NazaFieldPro();
             type:'bar',
             data:{labels:['Usina 2','Usina 3','Usina 4'], datasets:[
               {label:'Rota das pilhas (%)', data:[routeTotals.u2/divisor, routeTotals.u3/divisor, routeTotals.u4/divisor], backgroundColor:['#0b2f7b','#0ea5e9','#22c55e']},
-              {label:'Fe previsto (%)', data:[ds.mixFe, ds.mixFe*0.998, ds.mixFe*1.005], type:'line', yAxisID:'y1', borderColor:'#f59e0b', backgroundColor:'#f59e0b', tension:.2, pointRadius:2},
-              {label:'Pc previsto (%)', data:[ds.mixPc, ds.mixPc*1.01, ds.mixPc*0.99], type:'line', yAxisID:'y2', borderColor:'#ef4444', backgroundColor:'#ef4444', tension:.2, pointRadius:2},
-              {label:'PPC previsto (%)', data:[ds.mixPpc, ds.mixPpc*0.99, ds.mixPpc*1.02], type:'line', yAxisID:'y3', borderColor:'#22c55e', backgroundColor:'#22c55e', tension:.2, pointRadius:2}
+              {label:'Fe previsto (%)', data:[ds.mixFe, ds.mixFe*0.998, ds.mixFe*1.005], type:'line', yAxisID:'y1', borderColor:'#f59e0b', backgroundColor:'#f59e0b', tension:.2, pointRadius:4},
+              {label:'Pc previsto (%)', data:[ds.mixPc, ds.mixPc*1.01, ds.mixPc*0.99], type:'line', yAxisID:'y2', borderColor:'#ef4444', backgroundColor:'#ef4444', tension:.2, pointRadius:4},
+              {label:'PPC previsto (%)', data:[ds.mixPpc, ds.mixPpc*0.99, ds.mixPpc*1.02], type:'line', yAxisID:'y3', borderColor:'#22c55e', backgroundColor:'#22c55e', tension:.2, pointRadius:4}
             ]},
             options:{responsive:true, maintainAspectRatio:false, animation:false,
-              plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}}},
+              layout:{padding:{bottom:20, top:8}},
+              plugins:{
+                legend:{
+                  position:'bottom',
+                  labels:{
+                    boxWidth:14,
+                    padding:16,
+                    font:{size:11, weight:'600'},
+                    color:'#0f172a'
+                  }
+                },
+                datalabels:{
+                  display:true,
+                  font:{weight:'700',size:10},
+                  color:'#0f172a',
+                  anchor:'end',
+                  align:'top',
+                  offset:4,
+                  formatter:(v,ctx)=>{
+                    const lab = ctx.dataset.label||'';
+                    if (lab.includes('Rota')) return Number(v).toFixed(1)+'%';
+                    if (lab.includes('Pc')) return Number(v).toFixed(3);
+                    return Number(v).toFixed(2);
+                  }
+                }
+              },
               scales:{
-                y:{beginAtZero:true, max:100, ticks:{callback:(v)=>v+'%', font:{size:9}}},
-                y1:{position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size:9}}},
-                y2:{position:'right', offset:true, grid:{drawOnChartArea:false}, ticks:{font:{size:8}}},
-                y3:{position:'left', offset:true, grid:{drawOnChartArea:false}, ticks:{font:{size:8}}},
-                x:{ticks:{font:{size:9}}}
+                y:{beginAtZero:true, max:100, ticks:{callback:(v)=>v+'%', font:{size:11}}},
+                y1:{position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size:11}}},
+                y2:{position:'right', offset:true, grid:{drawOnChartArea:false}, ticks:{font:{size:10}}},
+                y3:{position:'left', offset:true, grid:{drawOnChartArea:false}, ticks:{font:{size:10}}},
+                x:{ticks:{font:{size:11}}}
               }
             }
           }));
@@ -6762,10 +6681,6 @@ setInterval(() => {
   border-color:#3b82f6; outline:none; box-shadow:0 0 0 3px rgba(59,130,246,0.15);
 }
 .sim-inline-item .origin { font-size:9px; color:#94a3b8; margin-top:2px; }
-.sim-inline-item-nova { box-shadow:0 0 0 2px rgba(168,85,247,.45); background:#fdf4ff!important; }
-.sim-destino-box { font-size:11px; font-weight:800; color:#0f172a; background:linear-gradient(180deg,#f8fafc,#e2e8f0); border:1px solid #cbd5e1; border-radius:10px; padding:6px 8px; margin:6px 0 4px; }
-.sim-nova-frente-label { font-size:9px; font-weight:900; color:#fff; background:#7c3aed; padding:2px 8px; border-radius:999px; white-space:nowrap; }
-.sim-aba-note { font-size:9px; font-weight:800; color:#7c3aed; margin:-2px 0 4px; }
 
 /* Painel resumo (read-only) */
 .sim-source-panel {
@@ -6925,17 +6840,9 @@ setInterval(() => {
       const feSrc = frenteTeorSrc(f, usinaRef, 'fe');
       const pcSrc = frenteTeorSrc(f, usinaRef, 'pc');
       const ppcSrc = frenteTeorSrc(f, usinaRef, 'ppc');
-      const destEsc = String(f.destino || '—').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const novaCls = f.criadaNova ? ' sim-inline-item-nova' : '';
-      const novaLbl = f.criadaNova ? '<span class="sim-nova-frente-label">Nova Frente</span>' : '';
-      const abaNote = f.abaProvisoria ? '<div class="sim-aba-note">(Aba p/Nova Frente)</div>' : '';
       frentesHTML += `
-        <div class="sim-inline-item${novaCls}" style="border-left:3px solid #ec4899">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
-            <label style="margin:0">${f.codigo || 'Frente '+(i+1)}</label>${novaLbl}
-          </div>
-          <div class="sim-destino-box" title="Destino operacional">Destino: ${destEsc}</div>
-          ${abaNote}
+        <div class="sim-inline-item" style="border-left:3px solid #ec4899">
+          <label>${f.codigo || 'Frente '+(i+1)}</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">
             <div><span style="font-size:9px;color:#94a3b8">Plan (t)</span><input type="number" step="0.01" value="${num(f.planejado)}" onchange="app.updateFrenteFromSim(${i},'planejado',this.value)"></div>
             <div><span style="font-size:9px;color:#94a3b8">Real (t)</span><input type="number" step="0.01" value="${num(f.realizado)}" onchange="app.updateFrenteFromSim(${i},'realizado',this.value)"></div>
