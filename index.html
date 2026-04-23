@@ -1120,10 +1120,11 @@
                     <span class="inline-flex items-center rounded-full bg-teal-600 px-3 py-1 text-white text-sm">RONDA</span>
                     Inspeção diária em campo
                 </h3>
-                <p class="text-sm text-gray-700 mb-4 max-w-3xl">Checklist inspirado no modelo em slides: cada caixa tem texto editável e foto (câmera ou arquivo). Os dados ficam salvos neste aparelho para gerar PDF mesmo offline.</p>
+                <p class="text-sm text-gray-700 mb-4 max-w-3xl">Cada <strong>slide</strong> = uma frente, <strong>um abaixo do outro</strong> (como no PowerPoint): linha superior com <strong>duas lavras + satélite</strong> (3 colunas); abaixo, <strong>Condições operacionais</strong> à esquerda e <strong>marcações / topografia</strong> à direita. Fotos maiores para leitura em campo. PDF idêntico ao ecrã.</p>
+                <div id="rondaCoverFields" class="mb-6 p-4 rounded-2xl border-2 border-teal-300 bg-white/90"></div>
                 <label class="block text-sm font-bold text-teal-900 mb-2">Observações gerais da ronda</label>
                 <textarea id="rondaObsGeral" class="input-field w-full rounded-xl px-4 py-3 mb-6 text-gray-900" rows="2" placeholder="Resumo final, pendências para o próximo turno..." onchange="app.saveRondaObsGeral()"></textarea>
-                <div id="rondaSlotsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+                <div id="rondaSlotsGrid" class="flex flex-col gap-8 max-w-[1100px] mx-auto w-full"></div>
             </div>
         </section>
 
@@ -1157,6 +1158,32 @@
     <div id="modalFrente" class="fixed inset-0 modal-overlay z-50 hidden flex-col"><div class="flex items-center justify-between p-4 border-b-2 border-naza-accent bg-gradient-to-r from-naza-dark to-naza-primary"><h3 class="text-xl font-black text-white" id="modalFrenteTitle">NOVA FRENTE</h3><button onclick="app.closeModalFrente()" class="p-2 text-white hover:text-naza-accent"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div class="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-naza-dark to-naza-primary/50"><input type="hidden" id="frenteIndex"><div><label class="block text-sm font-bold text-naza-accent mb-2">CÓDIGO DA FRENTE</label><input type="text" id="frenteCodigo" class="input-field w-full rounded-xl px-4 py-3 uppercase" placeholder="Ex: 11CR12-F01"></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-bold text-naza-accent mb-2">PLANEJADO (t)</label><input type="number" step="0.01" id="frentePlan" class="input-field w-full rounded-xl px-4 py-3" placeholder="0,00"></div><div><label class="block text-sm font-bold text-naza-accent mb-2">REALIZADO (t)</label><input type="number" step="0.01" id="frenteReal" class="input-field w-full rounded-xl px-4 py-3" placeholder="0,00" oninput="app.verificarRealizado()"></div></div><div><label class="block text-sm font-bold text-naza-accent mb-2">DESTINO</label><select id="frenteDestino" class="input-field w-full rounded-xl px-4 py-3"><option value="11CR12">11CR12</option><option value="11CR13">11CR13</option><option value="11CR14">11CR14</option><option value="BR02">BR02</option><option value="Usina 2">Usina 2</option><option value="Usina 3">Usina 3</option></select></div><div><label class="block text-sm font-bold text-naza-accent mb-2">STATUS</label><select id="frenteStatus" class="input-field w-full rounded-xl px-4 py-3"><option value="pendente">PENDENTE</option><option value="em_andamento">EM ANDAMENTO</option><option value="concluida">CONCLUÍDA</option><option value="bloqueada">BLOQUEADA</option></select></div><div><label class="block text-sm font-bold text-naza-accent mb-2">OBSERVAÇÕES</label><textarea id="frenteObs" class="input-field w-full rounded-xl px-4 py-3" rows="3" placeholder="Observações sobre a frente..."></textarea></div><div><label class="block text-sm font-bold text-naza-accent mb-2">FOTOS DA FRENTE</label><div class="flex gap-3 mb-3"><button onclick="app.tirarFoto()" class="btn-primary flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>TIRAR FOTO</button><label class="btn-success flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>GALERIA<input type="file" accept="image/*" class="hidden" onchange="app.selecionarFoto(this)"></label></div><div id="frenteFotosPreview" class="photo-gallery"></div></div><div class="flex gap-3 pt-4"><button onclick="app.closeModalFrente()" class="flex-1 py-4 rounded-xl font-bold bg-gray-500 text-white hover:bg-gray-600 transition-colors">CANCELAR</button><button onclick="app.saveFrente()" class="btn-success flex-1 py-4 rounded-xl font-bold text-lg">SALVAR FRENTES</button></div></div></div>
 
     <div id="modalCamera" class="fixed inset-0 modal-overlay z-50 hidden flex-col items-center justify-center p-4"><div class="glass-panel rounded-3xl p-4 w-full max-w-lg"><div class="flex items-center justify-between mb-4"><h3 class="text-xl font-black text-primary">CAPTURAR FOTO</h3><button onclick="app.fecharCamera()" class="p-2 text-gray-600 hover:text-red-500"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div class="relative rounded-xl overflow-hidden bg-black"><video id="cameraVideo" class="w-full h-64 object-cover" autoplay playsinline></video><div class="absolute inset-0 camera-frame pointer-events-none"></div></div><div class="flex gap-3 mt-4"><button onclick="app.fecharCamera()" class="flex-1 py-3 rounded-xl font-bold bg-gray-500 text-white">CANCELAR</button><button onclick="app.capturarFoto()" class="btn-primary flex-1 py-3 rounded-xl font-bold">CAPTURAR</button></div></div></div>
+
+    <div id="modalRondaPaint" class="fixed inset-0 modal-overlay z-[60] hidden flex-col items-center justify-center p-3 overflow-y-auto">
+      <div class="glass-panel rounded-2xl p-4 w-full max-w-4xl max-h-[96vh] flex flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h3 class="text-lg font-black text-teal-900">Desenhar / anotar na foto</h3>
+          <button type="button" onclick="app.closeRondaPaintEditor()" class="px-3 py-1 rounded-lg bg-slate-200 font-bold text-sm">Fechar</button>
+        </div>
+        <div class="flex flex-wrap gap-2 mb-3 items-center text-sm">
+          <button type="button" id="rondaPaintToolPen" class="px-3 py-2 rounded-lg bg-teal-600 text-white font-bold">Caneta</button>
+          <button type="button" id="rondaPaintToolEraser" class="px-3 py-2 rounded-lg bg-slate-200 font-bold">Borracha</button>
+          <button type="button" id="rondaPaintToolText" class="px-3 py-2 rounded-lg bg-slate-200 font-bold">Texto</button>
+          <label class="flex items-center gap-1 font-bold text-gray-700">Cor <input type="color" id="rondaPaintColor" value="#ff0000" class="h-9 w-12 cursor-pointer rounded border"/></label>
+          <label class="flex items-center gap-1 font-bold text-gray-700">Traço <input type="range" id="rondaPaintWidth" min="1" max="16" value="4" class="w-24"/></label>
+          <button type="button" id="rondaPaintClearDraw" class="px-3 py-2 rounded-lg bg-amber-100 text-amber-950 font-bold border border-amber-400">Limpar rabiscos</button>
+        </div>
+        <div id="rondaPaintCanvasWrap" class="relative w-full rounded-xl overflow-hidden border-2 border-teal-400 bg-neutral-900 touch-none" style="min-height:200px">
+          <canvas id="rondaPaintBase" class="absolute inset-0 w-full h-full pointer-events-none" style="object-fit:contain"></canvas>
+          <canvas id="rondaPaintDraw" class="absolute inset-0 w-full h-full cursor-crosshair touch-none"></canvas>
+        </div>
+        <p class="text-xs text-gray-600 mt-2">Use o dedo no celular ou o mouse no computador. Salvar incorpora os rabiscos na imagem.</p>
+        <div class="flex gap-3 mt-4">
+          <button type="button" onclick="app.closeRondaPaintEditor()" class="flex-1 py-3 rounded-xl font-bold bg-gray-400 text-white">Cancelar</button>
+          <button type="button" onclick="app.saveRondaPaintEditor()" class="flex-1 py-3 rounded-xl font-bold bg-teal-600 text-white">Salvar imagem</button>
+        </div>
+      </div>
+    </div>
 
     <div id="modalFoto" class="fixed inset-0 modal-overlay z-50 hidden flex-col items-center justify-center p-4" onclick="app.fecharModalFoto()"><img id="fotoAmpliada" class="max-w-full max-h-[80vh] rounded-xl shadow-2xl" onclick="event.stopPropagation()"><button onclick="app.fecharModalFoto()" class="mt-4 px-6 py-2 bg-white rounded-full font-bold text-gray-800">FECHAR</button></div>
 
@@ -2879,6 +2906,29 @@ const app = new NazaFieldPro();
 .ronda-slot-card{border:2px dashed #0d9488;border-radius:16px;padding:14px;background:#fff;box-shadow:0 6px 20px rgba(13,148,136,.12)}
 .ronda-slot-photo{aspect-ratio:4/3;background:#f0fdfa;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid #99f6e4}
 .ronda-slot-photo img{max-width:100%;max-height:220px;object-fit:contain}
+.ronda-slide-ppt{border:2px solid #0f766e;border-radius:14px;background:#fff;overflow:hidden;margin-bottom:24px;box-shadow:0 10px 32px rgba(15,118,110,.14);width:100%}
+.ronda-ppt-head{display:flex;align-items:center;justify-content:space-between;background:#1e3a5f;padding:14px 18px;gap:12px}
+.ronda-ppt-codigo{flex:1;min-width:0;background:transparent;border:0;border-bottom:2px solid #facc15;color:#facc15;font-weight:900;font-size:clamp(15px,2.8vw,20px);letter-spacing:.02em;padding:6px 4px;outline:none}
+.ronda-ppt-logo{color:#fff;font-weight:900;font-size:clamp(14px,2.2vw,18px);letter-spacing:.08em;white-space:nowrap}
+.ronda-ppt-slide-layout{padding:14px 16px 18px;display:flex;flex-direction:column;gap:14px}
+.ronda-ppt-top3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:stretch;min-height:clamp(220px,42vh,480px)}
+.ronda-ppt-lavra-span2{grid-column:span 2;display:flex;gap:10px;min-height:clamp(200px,40vh,460px)}
+@media(max-width:900px){.ronda-ppt-top3{grid-template-columns:1fr;min-height:auto}.ronda-ppt-lavra-span2{grid-column:span 1;flex-direction:column;min-height:200px}}
+.ronda-ppt-sat-cell{min-height:clamp(200px,40vh,460px);border:2px solid #15803d;border-radius:8px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ronda-ppt-bottom2{display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:stretch}
+@media(max-width:900px){.ronda-ppt-bottom2{grid-template-columns:1fr}}
+.ronda-ppt-ph{flex:1;min-height:160px;border:2px solid #15803d;border-radius:8px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.ronda-ppt-ph.placeholder{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:#047857;text-align:center;padding:10px;line-height:1.35}
+.ronda-ppt-ph.single{flex:none;width:100%}
+.ronda-ppt-ph img{width:100%;height:100%;max-height:min(52vh,520px);min-height:180px;object-fit:contain;display:block;background:#fff}
+.ronda-ppt-strip img{height:64px;width:auto;object-fit:cover;border-radius:6px;border:1px solid #15803d}
+.ronda-ppt-label{font-weight:900;font-size:11px;text-align:center;border:1px solid #111827;padding:6px;background:#eef2ff;color:#111827}
+.ronda-ppt-area{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.45;width:100%;border:1px solid #111827;padding:10px;min-height:120px;resize:vertical;border-radius:4px}
+.ronda-ppt-sat{min-height:180px;border:2px solid #15803d;border-radius:8px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ronda-ppt-sat img{max-width:100%;max-height:min(52vh,520px);object-fit:contain}
+.ronda-ppt-right-stack{display:flex;flex-direction:column;gap:10px}
+.ronda-ppt-toolbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.ronda-ppt-mini{font-size:10px;font-weight:800;padding:6px 10px;border-radius:8px}
 </style>
 
 <script id="advanced-field-script">
@@ -4221,11 +4271,38 @@ const app = new NazaFieldPro();
     if (!Array.isArray(this.data.movimentacao.grid)) this.data.movimentacao.grid = [];
     if (this.data.movimentacao.grid.length)
       this.data.movimentacao.grid = this.data.movimentacao.grid.map(function(r) { return this.gridRowToArray(r); }, this);
-    if (!this.data.rondaDiaria || typeof this.data.rondaDiaria !== 'object') this.data.rondaDiaria = { slots: [], obsGeral: '' };
+    if (!this.data.rondaDiaria || typeof this.data.rondaDiaria !== 'object') this.data.rondaDiaria = { slots: [], obsGeral: '', cover: {} };
     if (!Array.isArray(this.data.rondaDiaria.slots)) this.data.rondaDiaria.slots = [];
+    if (!this.data.rondaDiaria.cover || typeof this.data.rondaDiaria.cover !== 'object') this.data.rondaDiaria.cover = {};
+    this.data.rondaDiaria.cover.title = this.data.rondaDiaria.cover.title != null ? String(this.data.rondaDiaria.cover.title) : 'INSPEÇÃO DIÁRIA DE CAMPO';
+    this.data.rondaDiaria.cover.subtitle = this.data.rondaDiaria.cover.subtitle != null ? String(this.data.rondaDiaria.cover.subtitle) : 'QUALIDADE / MINA — Ronda diária';
+    var migrateSlot = function(s, idx) {
+      if (s && Array.isArray(s.photosLavra)) return s;
+      var title = (s && s.title) ? String(s.title) : '';
+      var oldPhoto = s && s.photo ? s.photo : null;
+      var notes = (s && s.notes != null) ? String(s.notes) : '';
+      return {
+        id: (s && s.id) ? String(s.id) : ('ronda_' + (idx + 1)),
+        codigo: (s && s.codigo != null) ? String(s.codigo) : title,
+        photosLavra: oldPhoto ? [oldPhoto] : [],
+        photoSat: (s && s.photoSat) ? s.photoSat : null,
+        condicoesOp: (s && s.condicoesOp != null) ? String(s.condicoesOp) : notes,
+        marcacoesTopo: (s && s.marcacoesTopo != null) ? String(s.marcacoesTopo) : '',
+        topoRemanescente: (s && s.topoRemanescente != null) ? String(s.topoRemanescente) : ''
+      };
+    };
+    if (this.data.rondaDiaria.slots.length)
+      this.data.rondaDiaria.slots = this.data.rondaDiaria.slots.map(migrateSlot);
     if (this.data.rondaDiaria.slots.length === 0) {
-      const RT = ['Acesso / pátio e vias','Pilhas / BR / desviador','Drenagem e meio ambiente','Equipamentos e segurança','Controle de qualidade / amostragem','Comunicação / passagem de turno','Pontos críticos do dia','Encerramento da ronda'];
-      this.data.rondaDiaria.slots = RT.map((title, i) => ({ id: 'ronda_' + (i + 1), title, notes: '', photo: null }));
+      this.data.rondaDiaria.slots = [{
+        id: 'ronda_1',
+        codigo: '',
+        photosLavra: [],
+        photoSat: null,
+        condicoesOp: '',
+        marcacoesTopo: '',
+        topoRemanescente: ''
+      }];
     }
   };
 
@@ -7847,6 +7924,42 @@ setInterval(() => {
 (function(){
   function escHtml(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
 
+  function findMovNegCol(padded, hdrIdx, maxC) {
+    var hdrRowForNeg = padded[hdrIdx] || [];
+    for (var cc = 0; cc < maxC; cc++) {
+      var hx = String(hdrRowForNeg[cc] || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (hx.indexOf('diferen') >= 0) return cc;
+      if ((hx.indexOf('realiz') >= 0 && hx.indexOf('+') >= 0) || hx.indexOf('realizada (+)') >= 0) return cc;
+    }
+    return -1;
+  }
+
+  function mineZoneFromLabel(s) {
+    var u = String(s || '').toUpperCase();
+    if (u.indexOf('NORTE') >= 0) return 'NORTE';
+    if (u.indexOf('SUL') >= 0) return 'SUL';
+    if (u.indexOf('FAZ') >= 0) return 'FAZ';
+    return '';
+  }
+
+  function origDestBgForZone(zone) {
+    if (zone === 'NORTE') return '#c8e6c9';
+    if (zone === 'SUL') return '#fff59d';
+    if (zone === 'FAZ') return '#d7ccc8';
+    return '#ffffff';
+  }
+
+  function rowIsOpMinaBanner(row) {
+    var j = (row || []).map(function(c) { return String(c || ''); }).join(' ');
+    return /opera(ç|c)(a|ã)o\s+de\s+mina/i.test(j);
+  }
+
+  function rowIsNotesLabelRow(row) {
+    var a = String(row[0] || '').trim();
+    return /^(MINERODUTO|UHE|PCH|BRITAGEM|QUALIDADE|MINA\b|TCLD|MUSA|USINA)/i.test(a);
+  }
+
+  /** Fatia imagem em páginas com deslocamento Y correto (evita faixa branca / duplicação no PDF). */
   function addCanvasSplitPdf(pdf, canvas, landscape){
     const margin = 10;
     const pageW = landscape ? 297 : 210;
@@ -7854,15 +7967,14 @@ setInterval(() => {
     const imgW = pageW - 2 * margin;
     const imgH = (canvas.height * imgW) / canvas.width;
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
-    const innerH = pageH - 2 * margin;
-    let heightLeft = imgH;
-    pdf.addImage(imgData, 'JPEG', margin, margin, imgW, imgH);
-    heightLeft -= innerH;
-    while (heightLeft > 0) {
-      const y = margin + (heightLeft - imgH);
-      pdf.addPage(landscape ? 'l' : 'p', 'mm', 'a4');
-      pdf.addImage(imgData, 'JPEG', margin, y, imgW, imgH);
-      heightLeft -= innerH;
+    const usableH = pageH - 2 * margin;
+    let position = 0;
+    let pageIdx = 0;
+    while (position < imgH - 0.5) {
+      if (pageIdx > 0) pdf.addPage(landscape ? 'l' : 'p', 'mm', 'a4');
+      pdf.addImage(imgData, 'JPEG', margin, margin - position, imgW, imgH);
+      position += usableH;
+      pageIdx++;
     }
   }
 
@@ -7938,21 +8050,12 @@ setInterval(() => {
     const padded = rect.rows;
     const maxC = Math.max(rect.numCols || 0, 1);
     const hdrIdx = typeof app.findMovimentacaoHeaderRow === 'function' ? app.findMovimentacaoHeaderRow(g) : 0;
+    const negCol = findMovNegCol(padded, hdrIdx, maxC);
 
     const zoomKey = 'naza_mov_zoom_v1';
     let zoom = 82;
     try { zoom = Math.min(100, Math.max(60, Number(localStorage.getItem(zoomKey) || 82))); } catch(e) {}
 
-    const minePalette = {
-      'NORTE': '#8BC34A',
-      'SUL 1': '#FFEB3B',
-      'SUL': '#FFEB3B',
-      'FAZ': '#CBBF9A',
-      'CENTRO': '#CBBF9A',
-      'TOTAL': '#ffffff'
-    };
-
-    const metaEnd = Math.max(0, hdrIdx);
     let html = '';
 
     const viewKey = 'naza_mov_view_v1';
@@ -7974,34 +8077,13 @@ setInterval(() => {
     html += '<div class="overflow-x-auto rounded-2xl border-2 border-amber-400 bg-white" style="padding:10px">';
     html += '  <div id="movSheetZoomWrap" style="transform-origin: top left; transform: scale(' + (zoom/100).toFixed(2) + '); width:' + Math.round(100/ (zoom/100)) + '%;">';
 
-    // Render meta (técnico/letra/horário) com faixa azul se existir
-    if (metaEnd > 0) {
-      const metaRows = padded.slice(0, metaEnd);
-      const headerRow = metaRows[0] || [];
-      const isMetaLike = headerRow.some(c => String(c||'').toLowerCase().includes('técnic')) && headerRow.some(c => String(c||'').toLowerCase().includes('letra'));
-      if (isMetaLike) {
-        html += '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:10px;border:2px solid #0b2f7b">';
-        html += '<colgroup><col style="width:40%"><col style="width:20%"><col style="width:40%"></colgroup>';
-        html += '<thead><tr style="background:#0b2f7b;color:#fff;font-weight:900">';
-        html += '<th style="border:1px solid #061a43;padding:10px;text-align:center">Técnico</th>';
-        html += '<th style="border:1px solid #061a43;padding:10px;text-align:center">Letra</th>';
-        html += '<th style="border:1px solid #061a43;padding:10px;text-align:center">Horário</th>';
-        html += '</tr></thead><tbody>';
-        for (let i=1;i<metaRows.length;i++) {
-          const r = metaRows[i] || [];
-          const a = escHtml(r[0]||'');
-          const b = escHtml(r[3]||r[1]||'');
-          const c = escHtml(r[4]||r[2]||'');
-          if (!a && !b && !c) continue;
-          html += '<tr style="background:#0b2f7b;color:#fff;font-weight:900">';
-          html += '<td style="border:1px solid #061a43;padding:10px;text-align:center">' + a + '</td>';
-          html += '<td style="border:1px solid #061a43;padding:10px;text-align:center">' + b + '</td>';
-          html += '<td style="border:1px solid #061a43;padding:10px;text-align:center">' + c + '</td>';
-          html += '</tr>';
-        }
-        html += '</tbody></table>';
+    const rowLooksTotal = function(row) {
+      const lim = Math.min(row.length, 8);
+      for (let c = 0; c < lim; c++) {
+        if (/^TOTAL/i.test(String(row[c] != null ? row[c] : '').trim())) return true;
       }
-    }
+      return false;
+    };
 
     const wcols = [92, 110, 210, 170, 120, 92, 92, 92, 140, 120, 420];
     const colgroupHtml = (cols) => {
@@ -8019,34 +8101,50 @@ setInterval(() => {
     };
 
     const renderEditTable = () => {
-      let t = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;border:2px solid #f59e0b">';
+      let t = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;border:2px solid #f59e0b">';
       t += colgroupHtml(maxC);
       let currentMine = '';
-      for (let r = metaEnd; r < padded.length; r++) {
+      for (let r = 0; r < padded.length; r++) {
         const row = padded[r] || [];
+        const isLeading = hdrIdx > 0 && r < hdrIdx;
         const isHdr = r === hdrIdx;
         const mineVal = String(row[0]||'').trim();
-        if (mineVal) currentMine = mineVal;
-        const mineColor = minePalette[currentMine] || '#ffffff';
-        const isTotal = /^TOTAL/i.test(String(row[0]||'').trim()) || /^TOTAL/i.test(String(row[1]||'').trim());
-        t += '<tr style="background:' + (isHdr ? '#f3f4f6' : (isTotal ? '#0b2f7b' : '#ffffff')) + ';color:' + (isTotal ? '#ffffff' : '#111827') + ';font-weight:' + (isHdr || isTotal ? '900' : '700') + ';">';
+        if (!isLeading && mineVal) currentMine = mineVal;
+        const zone = mineZoneFromLabel(currentMine);
+        const odBg = origDestBgForZone(zone);
+        const isTotal = rowLooksTotal(row);
+        const isBanner = !isLeading && !isHdr && !isTotal && rowIsOpMinaBanner(row);
+        const isNotes = !isLeading && !isHdr && !isTotal && !isBanner && rowIsNotesLabelRow(row);
+        let trBg = '#ffffff';
+        if (isLeading) trBg = '#f3f6fb';
+        else if (isHdr) trBg = '#f3f4f6';
+        else if (isTotal || isBanner) trBg = '#0b2f7b';
+        t += '<tr style="background:' + trBg + ';color:' + (isTotal || isBanner ? '#ffffff' : '#111827') + ';font-weight:' + (isHdr || isTotal || isBanner ? '900' : '700') + ';">';
         for (let c = 0; c < maxC; c++) {
           const raw = row[c] != null ? row[c] : '';
           const q = escHtml(raw).replace(/"/g, '&quot;');
           const align = (c >= 4 && c <= 9) ? 'right' : 'center';
           let bg = '';
-          if (isTotal) bg = '#0b2f7b';
+          if (isTotal || isBanner) bg = '#0b2f7b';
+          else if (isLeading) bg = '#f3f6fb';
           else if (!isHdr && (c === 1)) bg = '#9db7d5';
-          else if (!isHdr && (c === 2 || c === 3)) bg = mineColor;
+          else if (!isHdr && (c === 2 || c === 3)) bg = odBg;
           else if (!isHdr && c === maxC - 1) bg = '#fffdf5';
           else bg = (isHdr ? '#f3f4f6' : '#ffffff');
+          let negCss = '';
+          if (isNotes && c === 0) negCss = 'color:#b91c1c;font-weight:900;';
+          if (!isHdr && !isTotal && !isLeading && !isBanner && negCol >= 0 && c === negCol && typeof app.toNumber === 'function' && app.toNumber(String(raw)) < 0) {
+            bg = '#fce7f3';
+            negCss = 'color:#b91c1c;font-weight:900;';
+          }
+          if (isBanner) negCss += 'color:#ffffff;';
           const weight = (c === 0 || c === 2 || c === 3) ? '900' : (isHdr ? '900' : '700');
           const ws = (c === maxC - 1 || c === 2) ? 'pre-wrap' : 'normal';
-          t += '<td style="' + cellStyle(isHdr, isTotal, c, bg, align, ws, weight) + '">';
+          t += '<td style="' + cellStyle(isHdr, isTotal, c, bg, align, ws, weight) + negCss + '">';
           if (c === maxC - 1) {
-            t += '<textarea rows="2" style="width:100%;min-height:38px;resize:vertical;background:transparent;border:0;outline:none;font:inherit;color:inherit" data-mov-r="' + r + '" data-mov-c="' + c + '">' + q + '</textarea>';
+            t += '<textarea rows="2" style="width:100%;min-height:38px;resize:vertical;background:transparent;border:0;outline:none;font:inherit;color:inherit;' + negCss + '" data-mov-r="' + r + '" data-mov-c="' + c + '">' + q + '</textarea>';
           } else {
-            t += '<input type="text" style="width:100%;background:transparent;border:0;outline:none;font:inherit;color:inherit;text-align:' + align + '" data-mov-r="' + r + '" data-mov-c="' + c + '" value="' + q + '" />';
+            t += '<input type="text" style="width:100%;background:transparent;border:0;outline:none;font:inherit;text-align:' + align + ';' + negCss + '" data-mov-r="' + r + '" data-mov-c="' + c + '" value="' + q + '" />';
           }
           t += '</td>';
         }
@@ -8058,15 +8156,25 @@ setInterval(() => {
 
     const renderVisualTable = () => {
       // Visual: mescla Mina (col 0) e Material (col 1) por blocos consecutivos; sem inputs.
-      let t = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;border:2px solid #f59e0b">';
+      let t = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;border:2px solid #f59e0b">';
       t += colgroupHtml(maxC);
+      for (let r = 0; hdrIdx > 0 && r < hdrIdx; r++) {
+        const row = padded[r] || [];
+        t += '<tr style="background:#f3f6fb;color:#111827;font-weight:700">';
+        for (let c = 0; c < maxC; c++) {
+          const raw = row[c] != null ? row[c] : '';
+          const align = (c >= 4 && c <= 9) ? 'right' : 'center';
+          t += '<td style="' + cellStyle(false, false, c, '#f3f6fb', align, 'normal', '700') + '">' + escHtml(raw).replace(/\n/g, '<br/>') + '</td>';
+        }
+        t += '</tr>';
+      }
       const mergeRows = [];
-      for (let r = metaEnd; r < padded.length; r++) {
+      for (let r = hdrIdx; r < padded.length; r++) {
         const row = padded[r] || [];
         const isHdr = r === hdrIdx;
         const mine = String(row[0]||'').trim();
         const material = String(row[1]||'').trim();
-        const isTotal = /^TOTAL/i.test(mine) || /^TOTAL/i.test(material);
+        const isTotal = rowLooksTotal(row);
         mergeRows.push({ r, row, isHdr, isTotal, mine, material });
       }
       // compute rowspans for col0 and col1 (skip header + total lines)
@@ -8102,34 +8210,46 @@ setInterval(() => {
         const r = it.r;
         const row = it.row;
         if (it.mine) currentMine = it.mine;
-        const mineColor = minePalette[currentMine] || '#ffffff';
-        t += '<tr style="background:' + (it.isHdr ? '#f3f4f6' : (it.isTotal ? '#0b2f7b' : '#ffffff')) + ';color:' + (it.isTotal ? '#ffffff' : '#111827') + ';font-weight:' + (it.isHdr || it.isTotal ? '900' : '700') + ';">';
+        const zone = mineZoneFromLabel(currentMine);
+        const odBg = origDestBgForZone(zone);
+        const isBanner = !it.isHdr && !it.isTotal && rowIsOpMinaBanner(row);
+        const isNotes = !it.isHdr && !it.isTotal && !isBanner && rowIsNotesLabelRow(row);
+        const trBg = it.isHdr ? '#f3f4f6' : (it.isTotal || isBanner ? '#0b2f7b' : '#ffffff');
+        t += '<tr style="background:' + trBg + ';color:' + (it.isTotal || isBanner ? '#ffffff' : '#111827') + ';font-weight:' + (it.isHdr || it.isTotal || isBanner ? '900' : '700') + ';">';
         for (let c=0;c<maxC;c++) {
           if (c === 0) {
             const sp = span0.get(r);
             if (sp === 0) continue;
-            const bg = it.isTotal ? '#0b2f7b' : '#ffffff';
+            const bg = it.isTotal || isBanner ? '#0b2f7b' : '#ffffff';
             const ws = 'normal';
-            t += '<td rowspan="' + sp + '" style="' + cellStyle(it.isHdr, it.isTotal, c, bg, 'center', ws, '900') + '">' + escHtml(row[0]||'') + '</td>';
+            const lab = isNotes ? 'color:#b91c1c;font-weight:900;' : '';
+            t += '<td rowspan="' + sp + '" style="' + cellStyle(it.isHdr, it.isTotal, c, bg, 'center', ws, '900') + lab + '">' + escHtml(row[0]||'') + '</td>';
             continue;
           }
           if (c === 1) {
             const sp = span1.get(r);
             if (sp === 0) continue;
-            const bg = it.isTotal ? '#0b2f7b' : (it.isHdr ? '#f3f4f6' : '#9db7d5');
+            const bg = it.isTotal || isBanner ? '#0b2f7b' : (it.isHdr ? '#f3f4f6' : '#9db7d5');
             t += '<td rowspan="' + sp + '" style="' + cellStyle(it.isHdr, it.isTotal, c, bg, 'center', 'normal', '900') + '">' + escHtml(row[1]||'') + '</td>';
             continue;
           }
           const raw = row[c] != null ? row[c] : '';
           const align = (c >= 4 && c <= 9) ? 'right' : 'center';
           let bg = '';
-          if (it.isTotal) bg = '#0b2f7b';
-          else if (!it.isHdr && (c === 2 || c === 3)) bg = mineColor;
+          if (it.isTotal || isBanner) bg = '#0b2f7b';
+          else if (!it.isHdr && (c === 2 || c === 3)) bg = odBg;
           else if (!it.isHdr && c === maxC - 1) bg = '#fffdf5';
           else bg = (it.isHdr ? '#f3f4f6' : '#ffffff');
+          let negCss = '';
+          if (isNotes && c === 0) negCss = 'color:#b91c1c;font-weight:900;';
+          if (!it.isHdr && !it.isTotal && !isBanner && negCol >= 0 && c === negCol && typeof app.toNumber === 'function' && app.toNumber(String(raw)) < 0) {
+            bg = '#fce7f3';
+            negCss = 'color:#b91c1c;font-weight:900;';
+          }
+          if (isBanner) negCss += 'color:#ffffff;';
           const ws = (c === maxC - 1 || c === 2) ? 'pre-wrap' : 'normal';
           const weight = (c === 2 || c === 3) ? '900' : (it.isHdr ? '900' : '700');
-          t += '<td style="' + cellStyle(it.isHdr, it.isTotal, c, bg, align, ws, weight) + '">' + escHtml(raw).replace(/\\n/g,'<br/>') + '</td>';
+          t += '<td style="' + cellStyle(it.isHdr, it.isTotal, c, bg, align, ws, weight) + negCss + '">' + escHtml(raw).replace(/\n/g, '<br/>') + '</td>';
         }
         t += '</tr>';
       }
@@ -8242,76 +8362,412 @@ setInterval(() => {
     input.value = '';
   };
 
+  var _rondaPaint = { slotIdx: -1, kind: '', photoIdx: 0, drawing: false, lastX: 0, lastY: 0, tool: 'pen' };
+
   app.renderRondaTab = function(){
-    const grid = document.getElementById('rondaSlotsGrid');
-    const obsEl = document.getElementById('rondaObsGeral');
+    var grid = document.getElementById('rondaSlotsGrid');
+    var obsEl = document.getElementById('rondaObsGeral');
+    var coverHost = document.getElementById('rondaCoverFields');
     if (!grid) return;
     app.normalizeLoadedState && app.normalizeLoadedState.call(app);
-    const slots = app.data.rondaDiaria.slots || [];
+    var slots = app.data.rondaDiaria.slots || [];
+    var cover = app.data.rondaDiaria.cover || {};
     if (obsEl) obsEl.value = app.data.rondaDiaria.obsGeral || '';
 
     function taEsc(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function attrEsc(t){ return String(t||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-    grid.innerHTML = slots.map((slot, i) => `
-      <div class="ronda-slot-card" data-slot-index="${i}">
-        <div class="flex items-start justify-between gap-2 mb-2">
-          <label class="text-xs font-bold text-teal-900 uppercase">Caixa ${i + 1}</label>
-          <button type="button" onclick="app.clearRondaPhoto(${i})" class="text-xs text-red-600 font-bold hover:underline">Limpar foto</button>
+
+    if (coverHost) {
+      coverHost.innerHTML =
+        '<p class="text-sm font-bold text-teal-900 mb-2">Capa do PDF (espelho PowerPoint)</p>' +
+        '<div class="grid md:grid-cols-2 gap-3">' +
+        '<div><label class="text-xs font-bold text-gray-700">Título da capa</label>' +
+        '<input type="text" id="rondaCoverTitle" class="input-field w-full rounded-lg px-3 py-2 mt-1 text-gray-900" value="' + attrEsc(cover.title) + '" onchange="app.saveRondaCover()" /></div>' +
+        '<div><label class="text-xs font-bold text-gray-700">Subtítulo</label>' +
+        '<input type="text" id="rondaCoverSubtitle" class="input-field w-full rounded-lg px-3 py-2 mt-1 text-gray-900" value="' + attrEsc(cover.subtitle) + '" onchange="app.saveRondaCover()" /></div>' +
+        '</div>';
+    }
+
+    function buildLavraPhotos(slot, i) {
+      var pix = Array.isArray(slot.photosLavra) ? slot.photosLavra : [];
+      var n = pix.length;
+      var row = '';
+      row += '<div class="flex gap-2 flex-1 w-full min-h-[200px]" style="min-height:clamp(200px,38vh,440px)">';
+      if (n === 0) {
+        row += '<div class="ronda-ppt-ph placeholder flex-1">Foto da frente<br/>de lavra</div>';
+        row += '<div class="ronda-ppt-ph placeholder flex-1">Foto da frente<br/>de lavra</div>';
+      } else if (n === 1) {
+        row += '<div class="ronda-ppt-ph single" style="flex:1 1 100%;max-width:100%">';
+        row += '<img src="' + pix[0] + '" alt="" draggable="false" />';
+        row += '</div>';
+      } else {
+        row += '<div class="ronda-ppt-ph flex-1"><img src="' + pix[0] + '" alt="" draggable="false" /></div>';
+        row += '<div class="ronda-ppt-ph flex-1"><img src="' + pix[1] + '" alt="" draggable="false" /></div>';
+      }
+      row += '</div>';
+      var strip = '';
+      if (n > 2) {
+        strip += '<div class="ronda-ppt-strip flex flex-wrap gap-2">';
+        for (var k = 2; k < n; k++) {
+          strip += '<div class="relative inline-flex items-start">';
+          strip += '<img src="' + pix[k] + '" alt="" draggable="false"/>';
+          strip += '<button type="button" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-7 h-7 text-sm font-black leading-7 shadow" onclick="app.removeRondaLavraPhoto(' + i + ',' + k + ')">×</button>';
+          strip += '</div>';
+        }
+        strip += '</div>';
+      }
+      var tools = '';
+      for (var pi = 0; pi < n; pi++) {
+        tools += '<button type="button" onclick="app.openRondaPaintEditor(' + i + ',\'lavra\',' + pi + ')" class="ronda-ppt-mini bg-white border-2 border-teal-600 text-teal-900">✎ Lavra ' + (pi + 1) + '</button>';
+      }
+      return { row: row, strip: strip, tools: tools };
+    }
+
+    var slidesHtml = slots.map(function(slot, i) {
+      var lav = buildLavraPhotos(slot, i);
+      return `
+      <article class="ronda-slide-ppt" data-slide-index="${i}">
+        <div class="flex items-center justify-between gap-2 px-3 py-2 bg-teal-50 border-b border-teal-200">
+          <span class="text-xs font-black text-teal-900">Slide ${i + 1} / ${slots.length} — frente avaliada</span>
+          <button type="button" onclick="app.removeRondaSlide(${i})" class="text-xs font-bold text-red-600 hover:underline" ${slots.length <= 1 ? 'disabled style="opacity:.4"' : ''}>Remover slide</button>
         </div>
-        <input type="text" class="input-field w-full rounded-lg px-3 py-2 mb-2 text-gray-900 font-bold text-sm"
-          value="${attrEsc(slot.title)}"
-          placeholder="Título do ponto"
-          onchange="app.updateRondaSlotTitle(${i}, this.value)" />
-        <textarea class="input-field w-full rounded-lg px-3 py-2 mb-3 text-gray-900 text-sm" rows="3" placeholder="Anotações de campo..."
-          onchange="app.updateRondaSlotNotes(${i}, this.value)">${taEsc(slot.notes)}</textarea>
-        <div class="ronda-slot-photo mb-3">${slot.photo ? `<img src="${slot.photo}" alt="">` : '<span class="text-teal-600/60 text-sm p-6">Sem foto</span>'}</div>
-        <label class="btn-primary w-full py-3 rounded-lg font-bold text-center cursor-pointer text-sm flex items-center justify-center gap-2">
-          <span>📷</span> Tirar foto ou escolher arquivo
-          <input type="file" accept="image/*" capture="environment" class="hidden"
-            onchange="app.onRondaPhotoChosen(${i}, this)" />
-        </label>
-      </div>`).join('');
+        <div class="ronda-ppt-head">
+          <input type="text" class="ronda-ppt-codigo" value="${attrEsc(slot.codigo || '')}" placeholder="Código da frente (ex.: AM-24BF-1076/AM)"
+            onchange="app.updateRondaCodigo(${i}, this.value)" />
+          <div class="ronda-ppt-logo">SAMARCO</div>
+        </div>
+        <div class="ronda-ppt-slide-layout">
+          <div class="ronda-ppt-top3">
+            <div class="ronda-ppt-lavra-span2 flex flex-col gap-2 justify-between">
+              ${lav.row}
+              ${lav.strip}
+              <div class="ronda-ppt-toolbar">
+                <label class="btn-primary ronda-ppt-mini cursor-pointer text-center">+ Fotos lavra (uma ou várias)
+                  <input type="file" accept="image/*" multiple="multiple" capture="environment" class="hidden" onchange="app.onRondaLavraPhotosChosen(${i}, this)" />
+                </label>
+                <button type="button" onclick="app.clearRondaLavraPhotos(${i})" class="ronda-ppt-mini bg-white border border-red-400 text-red-700">Limpar lavra</button>
+                ${lav.tools}
+              </div>
+            </div>
+            <div class="flex flex-col gap-2 min-h-0">
+              <div class="ronda-ppt-sat-cell flex-1">${slot.photoSat ? '<img src="' + slot.photoSat + '" alt="" draggable="false"/>' : '<span class="text-xs text-gray-500 font-mono p-4 text-center">Imagem satélite / panorâmica</span>'}</div>
+              <div class="ronda-ppt-toolbar">
+                <label class="btn-primary ronda-ppt-mini cursor-pointer">+ Foto satélite
+                  <input type="file" accept="image/*" capture="environment" class="hidden" onchange="app.onRondaSatPhotoChosen(${i}, this)" />
+                </label>
+                <button type="button" onclick="app.clearRondaSatPhoto(${i})" class="ronda-ppt-mini bg-white border border-red-400 text-red-700">Limpar</button>
+                <button type="button" onclick="app.openRondaPaintEditor(${i},'sat',0)" class="ronda-ppt-mini bg-white border-2 border-teal-600 text-teal-900" ${slot.photoSat ? '' : 'disabled style="opacity:.45"'}>✎ Satélite</button>
+              </div>
+            </div>
+          </div>
+          <div class="ronda-ppt-bottom2">
+            <div class="flex flex-col gap-1 min-h-0">
+              <div class="ronda-ppt-label">CONDIÇÕES OPERACIONAIS</div>
+              <textarea class="ronda-ppt-area flex-1" rows="8" placeholder="Observações operacionais (bullet points)..."
+                onchange="app.updateRondaCondicoes(${i}, this.value)">${taEsc(slot.condicoesOp || '')}</textarea>
+            </div>
+            <div class="ronda-ppt-right-stack">
+              <div>
+                <div class="ronda-ppt-label">MARCAÇÕES TOPOGRÁFICAS</div>
+                <textarea class="ronda-ppt-area mt-1" rows="4" onchange="app.updateRondaMarcacoes(${i}, this.value)">${taEsc(slot.marcacoesTopo || '')}</textarea>
+              </div>
+              <div>
+                <div class="ronda-ppt-label">TOPOGRAFIA (REMANESCENTE)</div>
+                <textarea class="ronda-ppt-area mt-1" rows="4" onchange="app.updateRondaTopoRem(${i}, this.value)">${taEsc(slot.topoRemanescente || '')}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>`;
+    }).join('');
+
+    grid.innerHTML =
+      '<div class="flex flex-wrap gap-3 mb-4 items-center">' +
+      '<button type="button" onclick="app.addRondaSlide()" class="px-4 py-3 rounded-xl font-black bg-teal-600 text-white border-2 border-teal-800 shadow">+ Adicionar slide (nova frente)</button>' +
+      '<span class="text-xs text-teal-900 max-w-xl">Uma foto ocupa as duas caixas; duas fotos ficam lado a lado; mais fotos aparecem abaixo. Use ✎ para rabiscar ou escrever na imagem.</span>' +
+      '</div>' + slidesHtml;
+
+    try { app.initRondaPaintBindings && app.initRondaPaintBindings(); } catch (e1) {}
   };
 
-  app.saveRondaObsGeral = function(){
-    const obsEl = document.getElementById('rondaObsGeral');
+  app.saveRondaCover = function(){
     app.normalizeLoadedState && app.normalizeLoadedState.call(app);
-    app.data.rondaDiaria.obsGeral = obsEl ? obsEl.value : '';
+    var t = document.getElementById('rondaCoverTitle');
+    var s = document.getElementById('rondaCoverSubtitle');
+    if (!app.data.rondaDiaria.cover) app.data.rondaDiaria.cover = {};
+    app.data.rondaDiaria.cover.title = t ? t.value : '';
+    app.data.rondaDiaria.cover.subtitle = s ? s.value : '';
     app.saveData();
   };
 
-  app.updateRondaSlotTitle = function(i, val){
+  app.addRondaSlide = function(){
     app.normalizeLoadedState && app.normalizeLoadedState.call(app);
-    if (app.data.rondaDiaria.slots[i]) app.data.rondaDiaria.slots[i].title = val;
+    app.data.rondaDiaria.slots.push({
+      id: 'ronda_' + Date.now(),
+      codigo: '',
+      photosLavra: [],
+      photoSat: null,
+      condicoesOp: '',
+      marcacoesTopo: '',
+      topoRemanescente: ''
+    });
+    app.saveData();
+    app.renderRondaTab();
+    app.showToast('Slide adicionado.');
+  };
+
+  app.removeRondaSlide = function(i){
+    app.normalizeLoadedState && app.normalizeLoadedState.call(app);
+    if (app.data.rondaDiaria.slots.length <= 1) {
+      app.showToast('Mantenha pelo menos um slide.', 'error');
+      return;
+    }
+    if (!confirm('Remover este slide?')) return;
+    app.data.rondaDiaria.slots.splice(i, 1);
+    app.saveData();
+    app.renderRondaTab();
+  };
+
+  app.updateRondaCodigo = function(i, val){
+    app.normalizeLoadedState && app.normalizeLoadedState.call(app);
+    if (app.data.rondaDiaria.slots[i]) app.data.rondaDiaria.slots[i].codigo = val;
+    app.saveData();
+  };
+  app.updateRondaCondicoes = function(i, val){
+    app.normalizeLoadedState && app.normalizeLoadedState.call(app);
+    if (app.data.rondaDiaria.slots[i]) app.data.rondaDiaria.slots[i].condicoesOp = val;
+    app.saveData();
+  };
+  app.updateRondaMarcacoes = function(i, val){
+    app.normalizeLoadedState && app.normalizeLoadedState.call(app);
+    if (app.data.rondaDiaria.slots[i]) app.data.rondaDiaria.slots[i].marcacoesTopo = val;
+    app.saveData();
+  };
+  app.updateRondaTopoRem = function(i, val){
+    app.normalizeLoadedState && app.normalizeLoadedState.call(app);
+    if (app.data.rondaDiaria.slots[i]) app.data.rondaDiaria.slots[i].topoRemanescente = val;
     app.saveData();
   };
 
-  app.updateRondaSlotNotes = function(i, val){
+  app.updateRondaSlotTitle = function(i, val){ app.updateRondaCodigo(i, val); };
+  app.updateRondaSlotNotes = function(i, val){ app.updateRondaCondicoes(i, val); };
+
+  app.onRondaLavraPhotosChosen = function(slotIndex, input){
+    var files = input.files;
+    if (!files || !files.length) return;
     app.normalizeLoadedState && app.normalizeLoadedState.call(app);
-    if (app.data.rondaDiaria.slots[i]) app.data.rondaDiaria.slots[i].notes = val;
-    app.saveData();
+    var slot = app.data.rondaDiaria.slots[slotIndex];
+    if (!slot) return;
+    if (!Array.isArray(slot.photosLavra)) slot.photosLavra = [];
+    var remaining = files.length;
+    for (var fi = 0; fi < files.length; fi++) {
+      (function(file){
+        var reader = new FileReader();
+        reader.onload = function(){
+          slot.photosLavra.push(reader.result);
+          remaining--;
+          if (remaining <= 0) {
+            app.saveData();
+            app.renderRondaTab();
+            app.showToast('Fotos da lavra atualizadas (slide ' + (slotIndex + 1) + ').');
+          }
+        };
+        reader.readAsDataURL(file);
+      })(files[fi]);
+    }
+    input.value = '';
   };
 
-  app.onRondaPhotoChosen = function(slotIndex, input){
-    const file = input.files && input.files[0];
+  app.onRondaSatPhotoChosen = function(slotIndex, input){
+    var file = input.files && input.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
+    var reader = new FileReader();
+    reader.onload = function(){
       app.normalizeLoadedState && app.normalizeLoadedState.call(app);
-      if (app.data.rondaDiaria.slots[slotIndex]) app.data.rondaDiaria.slots[slotIndex].photo = reader.result;
+      var slot = app.data.rondaDiaria.slots[slotIndex];
+      if (slot) slot.photoSat = reader.result;
       app.saveData();
       app.renderRondaTab();
-      app.showToast('Foto salva na caixa ' + (slotIndex + 1));
+      app.showToast('Foto satélite salva.');
     };
     reader.readAsDataURL(file);
     input.value = '';
   };
 
-  app.clearRondaPhoto = function(slotIndex){
+  app.removeRondaLavraPhoto = function(slotIndex, photoIndex){
     app.normalizeLoadedState && app.normalizeLoadedState.call(app);
-    if (app.data.rondaDiaria.slots[slotIndex]) app.data.rondaDiaria.slots[slotIndex].photo = null;
+    var slot = app.data.rondaDiaria.slots[slotIndex];
+    if (!slot || !Array.isArray(slot.photosLavra)) return;
+    slot.photosLavra.splice(photoIndex, 1);
     app.saveData();
     app.renderRondaTab();
+  };
+
+  app.clearRondaLavraPhotos = function(slotIndex){
+    app.normalizeLoadedState && app.normalizeLoadedState.call(app);
+    var slot = app.data.rondaDiaria.slots[slotIndex];
+    if (slot) slot.photosLavra = [];
+    app.saveData();
+    app.renderRondaTab();
+  };
+
+  app.clearRondaSatPhoto = function(slotIndex){
+    app.normalizeLoadedState && app.normalizeLoadedState.call(app);
+    var slot = app.data.rondaDiaria.slots[slotIndex];
+    if (slot) slot.photoSat = null;
+    app.saveData();
+    app.renderRondaTab();
+  };
+
+  app.onRondaPhotoChosen = function(slotIndex, input){
+    app.onRondaLavraPhotosChosen(slotIndex, input);
+  };
+
+  app.clearRondaPhoto = function(slotIndex){
+    app.clearRondaLavraPhotos(slotIndex);
+  };
+
+  app._layoutRondaPaintCanvases = function(img){
+    var wrap = document.getElementById('rondaPaintCanvasWrap');
+    var base = document.getElementById('rondaPaintBase');
+    var draw = document.getElementById('rondaPaintDraw');
+    if (!wrap || !base || !draw || !img) return;
+    var maxW = Math.min(wrap.clientWidth || 800, 920);
+    var scale = maxW / img.width;
+    var h = Math.min(Math.round(img.height * scale), 560);
+    base.width = maxW; base.height = h;
+    draw.width = maxW; draw.height = h;
+    var bctx = base.getContext('2d');
+    var dctx = draw.getContext('2d');
+    bctx.fillStyle = '#ffffff';
+    bctx.fillRect(0, 0, maxW, h);
+    bctx.drawImage(img, 0, 0, maxW, h);
+    dctx.clearRect(0, 0, maxW, h);
+  };
+
+  app.openRondaPaintEditor = function(slotIdx, kind, photoIdx){
+    app.normalizeLoadedState && app.normalizeLoadedState.call(app);
+    var slot = app.data.rondaDiaria.slots[slotIdx];
+    if (!slot) return;
+    var src = kind === 'sat' ? slot.photoSat : (slot.photosLavra && slot.photosLavra[photoIdx || 0]);
+    if (!src) {
+      app.showToast('Sem foto para editar neste slot.', 'error');
+      return;
+    }
+    _rondaPaint.slotIdx = slotIdx;
+    _rondaPaint.kind = kind;
+    _rondaPaint.photoIdx = photoIdx || 0;
+    _rondaPaint.tool = 'pen';
+    var modal = document.getElementById('modalRondaPaint');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    var im = new Image();
+    im.onload = function(){ app._layoutRondaPaintCanvases(im); };
+    im.src = src;
+  };
+
+  app.closeRondaPaintEditor = function(){
+    var modal = document.getElementById('modalRondaPaint');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  };
+
+  app.saveRondaPaintEditor = function(){
+    var base = document.getElementById('rondaPaintBase');
+    var draw = document.getElementById('rondaPaintDraw');
+    if (!base || !draw) return;
+    var out = document.createElement('canvas');
+    out.width = base.width;
+    out.height = base.height;
+    var octx = out.getContext('2d');
+    octx.drawImage(base, 0, 0);
+    octx.drawImage(draw, 0, 0);
+    var url = out.toDataURL('image/jpeg', 0.92);
+    app.normalizeLoadedState && app.normalizeLoadedState.call(app);
+    var slot = app.data.rondaDiaria.slots[_rondaPaint.slotIdx];
+    if (!slot) return;
+    if (_rondaPaint.kind === 'sat') slot.photoSat = url;
+    else {
+      if (!Array.isArray(slot.photosLavra)) slot.photosLavra = [];
+      slot.photosLavra[_rondaPaint.photoIdx] = url;
+    }
+    app.saveData();
+    app.closeRondaPaintEditor();
+    app.renderRondaTab();
+    app.showToast('Anotações incorporadas na foto.');
+  };
+
+  app.initRondaPaintBindings = function(){
+    if (app._rondaPaintBound) return;
+    app._rondaPaintBound = true;
+    var draw = document.getElementById('rondaPaintDraw');
+    if (!draw) return;
+    function pos(evt){
+      var r = draw.getBoundingClientRect();
+      var cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - r.left;
+      var cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - r.top;
+      var sx = draw.width / r.width;
+      var sy = draw.height / r.height;
+      return { x: cx * sx, y: cy * sy };
+    }
+    function line(x0,y0,x1,y1){
+      var dctx = draw.getContext('2d');
+      var col = document.getElementById('rondaPaintColor');
+      var w = document.getElementById('rondaPaintWidth');
+      var lw = w ? parseInt(w.value, 10) || 4 : 4;
+      dctx.lineCap = 'round';
+      dctx.lineJoin = 'round';
+      dctx.lineWidth = lw;
+      if (_rondaPaint.tool === 'eraser') {
+        dctx.globalCompositeOperation = 'destination-out';
+        dctx.strokeStyle = 'rgba(0,0,0,1)';
+      } else {
+        dctx.globalCompositeOperation = 'source-over';
+        dctx.strokeStyle = col ? col.value : '#ff0000';
+      }
+      dctx.beginPath();
+      dctx.moveTo(x0, y0);
+      dctx.lineTo(x1, y1);
+      dctx.stroke();
+      dctx.globalCompositeOperation = 'source-over';
+    }
+    draw.addEventListener('mousedown', function(e){ if (e.button !== 0) return; var p = pos(e); _rondaPaint.drawing = true; _rondaPaint.lastX = p.x; _rondaPaint.lastY = p.y; });
+    draw.addEventListener('mousemove', function(e){ if (!_rondaPaint.drawing) return; var p = pos(e); line(_rondaPaint.lastX, _rondaPaint.lastY, p.x, p.y); _rondaPaint.lastX = p.x; _rondaPaint.lastY = p.y; });
+    window.addEventListener('mouseup', function(){ _rondaPaint.drawing = false; });
+    draw.addEventListener('touchstart', function(e){ e.preventDefault(); var p = pos(e); _rondaPaint.drawing = true; _rondaPaint.lastX = p.x; _rondaPaint.lastY = p.y; }, { passive: false });
+    draw.addEventListener('touchmove', function(e){ e.preventDefault(); if (!_rondaPaint.drawing) return; var p = pos(e); line(_rondaPaint.lastX, _rondaPaint.lastY, p.x, p.y); _rondaPaint.lastX = p.x; _rondaPaint.lastY = p.y; }, { passive: false });
+    window.addEventListener('touchend', function(){ _rondaPaint.drawing = false; });
+    var pen = document.getElementById('rondaPaintToolPen');
+    var er = document.getElementById('rondaPaintToolEraser');
+    var tx = document.getElementById('rondaPaintToolText');
+    if (pen) pen.onclick = function(){ _rondaPaint.tool = 'pen'; };
+    if (er) er.onclick = function(){ _rondaPaint.tool = 'eraser'; };
+    if (tx) tx.onclick = function(){
+      _rondaPaint.tool = 'text';
+      var dctx = draw.getContext('2d');
+      var t = prompt('Texto para inserir na foto:');
+      if (!t) return;
+      var col = document.getElementById('rondaPaintColor');
+      var w = document.getElementById('rondaPaintWidth');
+      dctx.font = Math.max(14, (parseInt(w && w.value, 10) || 4) * 4) + 'px sans-serif';
+      dctx.fillStyle = col ? col.value : '#ff0000';
+      dctx.fillText(t, 24, 40);
+    };
+    var clr = document.getElementById('rondaPaintClearDraw');
+    if (clr) clr.onclick = function(){
+      var dctx = draw.getContext('2d');
+      dctx.clearRect(0, 0, draw.width, draw.height);
+    };
+  };
+
+  app.saveRondaObsGeral = function(){
+    var obsEl = document.getElementById('rondaObsGeral');
+    app.normalizeLoadedState && app.normalizeLoadedState.call(app);
+    app.data.rondaDiaria.obsGeral = obsEl ? obsEl.value : '';
+    app.saveData();
   };
 
   function buildMovimentacaoPrintHtml(){
@@ -8322,18 +8778,10 @@ setInterval(() => {
     const padded = rect.rows;
     const numCols = Math.max(rect.numCols || 0, 1);
     const hdrIdx = typeof app.findMovimentacaoHeaderRow === 'function' ? app.findMovimentacaoHeaderRow(g) : 0;
+    const negColPrint = findMovNegCol(padded, hdrIdx, numCols);
     const repDate = document.getElementById('reportDate') && document.getElementById('reportDate').value;
     const cfgTec = app.data.config && app.data.config.tecnico;
-    const minePalette = {
-      'NORTE': '#8BC34A',
-      'SUL 1': '#FFEB3B',
-      'SUL': '#FFEB3B',
-      'FAZ': '#CBBF9A',
-      'CENTRO': '#CBBF9A',
-      'TOTAL': '#0b2f7b'
-    };
 
-    const metaEnd = Math.max(0, hdrIdx);
     let h = '<div style="font-family:Calibri,Inter,system-ui,sans-serif;color:#0f172a;padding:12px 14px;background:#fff">';
     h += '<div style="border-bottom:3px solid #0b2f7b;padding-bottom:10px;margin-bottom:10px">';
     h += '<div style="font-size:20px;font-weight:900;color:#0b2f7b;letter-spacing:-0.02em">Relatório — Movimentação OP Mina</div>';
@@ -8345,38 +8793,15 @@ setInterval(() => {
     }
     h += '</div>';
 
-    // Meta header table (técnicos/letra/horário) em azul
-    if (metaEnd > 0) {
-      const metaRows = padded.slice(0, metaEnd);
-      const headerRow = metaRows[0] || [];
-      const isMetaLike = headerRow.some(c => String(c||'').toLowerCase().includes('técnic')) && headerRow.some(c => String(c||'').toLowerCase().includes('letra'));
-      if (isMetaLike) {
-        h += '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin:0 0 12px 0;border:2px solid #0b2f7b">';
-        h += '<colgroup><col style="width:40%"><col style="width:20%"><col style="width:40%"></colgroup>';
-        h += '<thead><tr style="background:#0b2f7b;color:#fff;font-weight:900">';
-        h += '<th style="border:1px solid #061a43;padding:10px;text-align:center">Técnico</th>';
-        h += '<th style="border:1px solid #061a43;padding:10px;text-align:center">Letra</th>';
-        h += '<th style="border:1px solid #061a43;padding:10px;text-align:center">Horário</th>';
-        h += '</tr></thead><tbody>';
-        for (let i=1;i<metaRows.length;i++) {
-          const r = metaRows[i] || [];
-          const a = escHtml(r[0]||'');
-          const b = escHtml(r[3]||r[1]||'');
-          const c = escHtml(r[4]||r[2]||'');
-          if (!a && !b && !c) continue;
-          h += '<tr style="background:#0b2f7b;color:#fff;font-weight:900">';
-          h += '<td style="border:1px solid #061a43;padding:10px;text-align:center">' + a + '</td>';
-          h += '<td style="border:1px solid #061a43;padding:10px;text-align:center">' + b + '</td>';
-          h += '<td style="border:1px solid #061a43;padding:10px;text-align:center">' + c + '</td>';
-          h += '</tr>';
-        }
-        h += '</tbody></table>';
+    function rowLooksTotalPrint(row) {
+      const lim = Math.min(row.length, 8);
+      for (let c = 0; c < lim; c++) {
+        if (/^TOTAL/i.test(String(row[c] != null ? row[c] : '').trim())) return true;
       }
+      return false;
     }
 
-    // Main table — espelhado e “bonito”
-    const start = metaEnd;
-    h += '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;border:2px solid #f59e0b">';
+    h += '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;border:2px solid #f59e0b">';
     h += '<colgroup>';
     const wcols = [92, 110, 210, 170, 120, 92, 92, 92, 140, 120, 420];
     for (let i=0;i<Math.min(numCols, wcols.length);i++) h += '<col style="width:' + wcols[i] + 'px">';
@@ -8384,31 +8809,45 @@ setInterval(() => {
     h += '</colgroup>';
 
     let currentMine = '';
-    for (let ri = start; ri < padded.length; ri++) {
+    for (let ri = 0; ri < padded.length; ri++) {
       const row = padded[ri] || [];
+      const isLeading = hdrIdx > 0 && ri < hdrIdx;
       const isHdr = ri === hdrIdx;
       const mineVal = String(row[0]||'').trim();
-      if (mineVal) currentMine = mineVal;
-      const mineColor = minePalette[currentMine] || '#ffffff';
-      const isTotal = /^TOTAL/i.test(String(row[0]||'').trim()) || /^TOTAL/i.test(String(row[1]||'').trim());
-      const trBg = isTotal ? '#0b2f7b' : (isHdr ? '#f3f4f6' : '#ffffff');
-      const trColor = isTotal ? '#ffffff' : '#0f172a';
-      h += '<tr style="background:' + trBg + ';color:' + trColor + ';font-weight:' + (isHdr || isTotal ? '900' : '700') + '">';
+      if (!isLeading && mineVal) currentMine = mineVal;
+      const zone = mineZoneFromLabel(currentMine);
+      const odBg = origDestBgForZone(zone);
+      const isTotal = rowLooksTotalPrint(row);
+      const isBanner = !isLeading && !isHdr && !isTotal && rowIsOpMinaBanner(row);
+      const isNotes = !isLeading && !isHdr && !isTotal && !isBanner && rowIsNotesLabelRow(row);
+      let trBg = isTotal || isBanner ? '#0b2f7b' : (isHdr ? '#f3f4f6' : (isLeading ? '#f3f6fb' : '#ffffff'));
+      const trColor = isTotal || isBanner ? '#ffffff' : '#0f172a';
+      h += '<tr style="background:' + trBg + ';color:' + trColor + ';font-weight:' + (isHdr || isTotal || isBanner ? '900' : '700') + '">';
       for (let ci = 0; ci < numCols; ci++) {
         const raw = row[ci] != null ? row[ci] : '';
         const cell = escHtml(raw).replace(/\n/g, '<br/>');
         const align = (ci >= 4 && ci <= 9) ? 'right' : 'center';
         let bg = trBg;
-        if (!isTotal) {
-          if (isHdr) bg = '#f3f4f6';
+        let tx = '';
+        if (isTotal || isBanner) bg = '#0b2f7b';
+        else if (!isTotal) {
+          if (isLeading) bg = '#f3f6fb';
+          else if (isHdr) bg = '#f3f4f6';
           else if (ci === 1) bg = '#9db7d5';
-          else if (ci === 2 || ci === 3) bg = mineColor;
+          else if (ci === 2 || ci === 3) bg = odBg;
           else if (ci === numCols - 1) bg = '#fffdf5';
           else bg = '#ffffff';
         }
+        if (isNotes && ci === 0) tx = 'color:#b91c1c;font-weight:900;';
+        if (!isLeading && !isBanner && negColPrint >= 0 && ci === negColPrint && typeof app.toNumber === 'function' && app.toNumber(String(raw)) < 0) {
+          if (!isTotal) bg = '#fce7f3';
+          tx = 'color:#b91c1c;font-weight:900;';
+          if (isTotal) tx = 'color:#fecaca;font-weight:900;';
+        }
+        if (isBanner) tx = 'color:#ffffff;font-weight:700;';
         const ws = (ci === numCols - 1 || ci === 2) ? 'pre-wrap' : 'normal';
         const border = isTotal ? '#061a43' : '#f59e0b';
-        h += '<td style="border:1px solid ' + border + ';padding:8px 8px;vertical-align:top;text-align:' + align + ';background:' + bg + ';white-space:' + ws + ';word-wrap:break-word">';
+        h += '<td style="border:1px solid ' + border + ';padding:8px 8px;vertical-align:top;text-align:' + align + ';background:' + bg + ';white-space:' + ws + ';word-wrap:break-word;' + tx + '">';
         h += cell;
         h += '</td>';
       }
@@ -8422,18 +8861,71 @@ setInterval(() => {
 
   function buildRondaPrintHtml(){
     app.normalizeLoadedState && app.normalizeLoadedState.call(app);
-    const slots = app.data.rondaDiaria.slots || [];
-    const obs = app.data.rondaDiaria.obsGeral || '';
-    let h = '<div style="font-family:Inter,system-ui,sans-serif;color:#111;padding:8px;max-width:1000px">';
-    h += '<h1 style="font-size:20px;margin:0 0 8px;color:#0f766e">Ronda diária de campo</h1>';
-    h += '<p style="font-size:12px;color:#444;margin:0 0 12px">Data: ' + escHtml(document.getElementById('reportDate') && document.getElementById('reportDate').value) + ' | Técnico: ' + escHtml(app.data.config && app.data.config.tecnico) + '</p>';
-    if (obs) h += '<div style="background:#f0fdfa;border:1px solid #5eead4;padding:10px;border-radius:8px;margin-bottom:14px;font-size:12px"><strong>Observações gerais:</strong><br/>' + escHtml(obs).replace(/\n/g,'<br/>') + '</div>';
-    slots.forEach((slot, i) => {
-      h += '<div style="border:2px dashed #0d9488;border-radius:12px;padding:12px;margin-bottom:12px;page-break-inside:avoid">';
-      h += '<div style="font-weight:800;color:#134e4a;margin-bottom:6px">' + (i + 1) + '. ' + escHtml(slot.title) + '</div>';
-      if (slot.notes) h += '<div style="font-size:12px;margin-bottom:8px;color:#334155">' + escHtml(slot.notes).replace(/\n/g,'<br/>') + '</div>';
-      if (slot.photo) h += '<div style="text-align:center"><img src="' + slot.photo + '" style="max-width:100%;max-height:280px;object-fit:contain;border-radius:8px;border:1px solid #99f6e4"/></div>';
-      else h += '<div style="font-size:11px;color:#94a3b8">Sem foto registrada.</div>';
+    var slots = app.data.rondaDiaria.slots || [];
+    var obs = app.data.rondaDiaria.obsGeral || '';
+    var cover = app.data.rondaDiaria.cover || {};
+    var repDate = document.getElementById('reportDate') && document.getElementById('reportDate').value;
+    var tec = app.data.config && app.data.config.tecnico;
+    var h = '<div style="font-family:Calibri,Inter,system-ui,sans-serif;color:#111;padding:0;max-width:1200px;background:#fff">';
+    h += '<div class="ronda-pdf-section" style="padding:48px 32px;min-height:520px;background:#1e3a5f;color:#fff;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center">';
+    h += '<div style="font-size:clamp(22px,4vw,34px);font-weight:900;color:#facc15;line-height:1.2">' + escHtml(cover.title || 'INSPEÇÃO DIÁRIA DE CAMPO') + '</div>';
+    h += '<div style="font-size:14px;margin-top:20px;opacity:.95;max-width:560px;line-height:1.4">' + escHtml(cover.subtitle || '') + '</div>';
+    h += '<div style="margin-top:36px;font-size:13px;border-top:1px solid rgba(255,255,255,.25);padding-top:20px;width:100%;max-width:480px">Data: ' + escHtml(repDate) + ' · Técnico: ' + escHtml(tec || '—') + '</div>';
+    h += '<div style="margin-top:32px;font-size:22px;font-weight:900;letter-spacing:.12em">SAMARCO</div>';
+    h += '</div>';
+    if (obs) {
+      h += '<div class="ronda-pdf-section" style="padding:12px;margin:12px 10px;background:#f0fdfa;border:1px solid #5eead4;border-radius:10px;font-size:12px"><strong>Observações gerais:</strong><br/>' + escHtml(obs).replace(/\n/g,'<br/>') + '</div>';
+    }
+    slots.forEach(function(slot, i){
+      var pix = Array.isArray(slot.photosLavra) ? slot.photosLavra : [];
+      var cod = escHtml(slot.codigo || ('Frente ' + (i + 1)));
+      h += '<div class="ronda-pdf-section" style="padding:12px 10px 20px;font-size:12px;background:#fff;overflow:hidden">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;background:#1e3a5f;padding:12px 16px;margin-bottom:12px;border-radius:4px">';
+      h += '<div style="color:#facc15;font-weight:900;font-size:17px;flex:1;min-width:0;word-break:break-word">' + cod + '</div>';
+      h += '<div style="color:#fff;font-weight:900;font-size:14px;letter-spacing:.08em;white-space:nowrap;margin-left:12px">SAMARCO</div>';
+      h += '</div>';
+      h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;min-height:240px">';
+      h += '<div style="grid-column:1 / span 2;display:flex;flex-direction:column;gap:8px;min-height:220px">';
+      h += '<div style="display:flex;gap:8px;flex:1;min-height:200px">';
+      if (pix.length === 0) {
+        h += '<div style="flex:1;border:2px solid #15803d;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#047857;font-family:monospace;text-align:center;padding:6px">Foto da frente<br/>de lavra</div>';
+        h += '<div style="flex:1;border:2px solid #15803d;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#047857;font-family:monospace;text-align:center;padding:6px">Foto da frente<br/>de lavra</div>';
+      } else if (pix.length === 1) {
+        h += '<div style="flex:1 1 100%;border:2px solid #15803d;border-radius:6px;overflow:hidden;text-align:center;background:#f8fafc">';
+        h += '<img src="' + pix[0] + '" style="width:100%;max-height:min(420px,55vh);object-fit:contain;display:block"/>';
+        h += '</div>';
+      } else {
+        h += '<div style="flex:1;border:2px solid #15803d;border-radius:6px;overflow:hidden;text-align:center;background:#f8fafc"><img src="' + pix[0] + '" style="width:100%;max-height:min(400px,52vh);object-fit:contain;display:block"/></div>';
+        h += '<div style="flex:1;border:2px solid #15803d;border-radius:6px;overflow:hidden;text-align:center;background:#f8fafc"><img src="' + pix[1] + '" style="width:100%;max-height:min(400px,52vh);object-fit:contain;display:block"/></div>';
+      }
+      h += '</div>';
+      if (pix.length > 2) {
+        h += '<div style="margin-bottom:4px">';
+        for (var k = 2; k < pix.length; k++) {
+          h += '<img src="' + pix[k] + '" style="height:56px;margin:3px;border:1px solid #15803d;border-radius:4px;vertical-align:middle"/>';
+        }
+        h += '</div>';
+      }
+      h += '</div>';
+      h += '<div style="display:flex;flex-direction:column;gap:8px;min-height:220px">';
+      h += '<div style="flex:1;min-height:200px;border:2px solid #15803d;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#f8fafc;overflow:hidden">';
+      if (slot.photoSat) h += '<img src="' + slot.photoSat + '" style="max-width:100%;max-height:min(420px,55vh);object-fit:contain;display:block"/>';
+      else h += '<span style="font-size:11px;color:#64748b;font-family:monospace;text-align:center;padding:12px">Imagem satélite / panorâmica</span>';
+      h += '</div>';
+      h += '</div>';
+      h += '</div>';
+      h += '<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;align-items:start">';
+      h += '<div>';
+      h += '<div style="font-weight:900;font-size:11px;text-align:center;border:1px solid #111827;padding:7px;background:#eef2ff;color:#111827">CONDIÇÕES OPERACIONAIS</div>';
+      h += '<div style="border:1px solid #111827;padding:10px;font-size:11px;font-family:ui-monospace,Menlo,monospace;white-space:pre-wrap;min-height:120px;line-height:1.45">' + escHtml(slot.condicoesOp || '').replace(/\n/g,'<br/>') + '</div>';
+      h += '</div>';
+      h += '<div>';
+      h += '<div style="font-weight:900;font-size:11px;text-align:center;border:1px solid #111827;padding:7px;background:#eef2ff">MARCAÇÕES TOPOGRÁFICAS</div>';
+      h += '<div style="border:1px solid #111827;padding:8px;font-size:11px;font-family:monospace;min-height:56px;line-height:1.4">' + escHtml(slot.marcacoesTopo || '').replace(/\n/g,'<br/>') + '</div>';
+      h += '<div style="font-weight:900;font-size:11px;text-align:center;border:1px solid #111827;padding:7px;margin-top:8px;background:#eef2ff">TOPOGRAFIA (REMANESCENTE)</div>';
+      h += '<div style="border:1px solid #111827;padding:8px;font-size:11px;font-family:monospace;min-height:56px;line-height:1.4">' + escHtml(slot.topoRemanescente || '').replace(/\n/g,'<br/>') + '</div>';
+      h += '</div>';
+      h += '</div>';
       h += '</div>';
     });
     h += '</div>';
@@ -8498,19 +8990,51 @@ setInterval(() => {
 
   app.exportPDFRonda = async function(){
     app.normalizeLoadedState && app.normalizeLoadedState.call(app);
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'position:fixed;left:-12000px;top:0;width:900px;background:#fff';
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;left:0;top:0;width:auto;min-width:1024px;max-width:1280px;box-sizing:border-box;padding:10px;background:#fff;overflow:visible;transform:translateX(-200vw);pointer-events:none;z-index:-1';
     wrap.innerHTML = buildRondaPrintHtml();
     document.body.appendChild(wrap);
     try {
       app.showToast('Gerando PDF ronda...');
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(function(r){ requestAnimationFrame(function(){ requestAnimationFrame(r); }); });
+      try {
+        var needW = Math.max(1100, wrap.scrollWidth || 0, (wrap.getBoundingClientRect && wrap.getBoundingClientRect().width) || 0);
+        wrap.style.width = Math.ceil(needW) + 'px';
+      } catch (e2) {}
+      await new Promise(function(r){ setTimeout(r, 180); });
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const canvas = await html2canvas(wrap, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 900, ignoreElements: function(el){ return el.tagName === 'IFRAME'; } });
-      addCanvasSplitPdf(pdf, canvas, false);
-      const data = document.getElementById('reportDate').value || 'ronda';
-      const tecnico = (app.data.config.tecnico || 'Tecnico').replace(/\s+/g, '_');
+      var pdf = new jsPDF('l', 'mm', 'a4');
+      var sections = wrap.querySelectorAll('.ronda-pdf-section');
+      var list = sections.length ? Array.prototype.slice.call(sections) : [wrap];
+      for (var si = 0; si < list.length; si++) {
+        var el = list[si];
+        await new Promise(function(r){ requestAnimationFrame(function(){ requestAnimationFrame(r); }); });
+        await new Promise(function(r){ setTimeout(r, si === 0 ? 120 : 200); });
+        var cw = Math.max(1024, el.scrollWidth || 1100);
+        var ch = Math.max(400, el.scrollHeight || 800);
+        try {
+          el.style.background = '#ffffff';
+        } catch (e3) {}
+        var canvas = await html2canvas(el, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          width: cw,
+          height: ch,
+          windowWidth: cw,
+          scrollX: 0,
+          scrollY: 0,
+          foreignObjectRendering: false,
+          imageTimeout: 25000,
+          ignoreElements: function(el2){ return el2.tagName === 'IFRAME'; }
+        });
+        if (si > 0) pdf.addPage('l', 'mm', 'a4');
+        addCanvasSplitPdf(pdf, canvas, true);
+      }
+      var data = document.getElementById('reportDate').value || 'ronda';
+      var tecnico = (app.data.config.tecnico || 'Tecnico').replace(/\s+/g, '_');
       pdf.save('NAZA_RondaDiaria_' + data + '_' + tecnico + '.pdf');
       app.showToast('PDF ronda diária gerado.');
     } catch (e) {
