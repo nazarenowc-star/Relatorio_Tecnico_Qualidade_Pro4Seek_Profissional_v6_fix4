@@ -971,6 +971,9 @@
       <button class="btn-auth btn-login" onclick="authManager.login()">ENTRAR</button>
       <div class="auth-toggle">Não tem conta? <a onclick="authManager.showRegister()">Criar conta</a></div>
       <div id="authError" class="auth-error"></div>
+      <div style="border-top:1px solid #cbd5e1;margin:16px 0 12px"></div>
+      <button class="btn-auth btn-register" onclick="authManager.useOffline()">USAR SEM LOGIN (OFFLINE)</button>
+      <div class="auth-toggle" style="margin-top:8px">Funciona no celular sem internet. As fotos e dados ficam salvos no aparelho; use o botão <strong>Backup</strong> da aba RONDA para passar para o PC.</div>
     </div>
     <div id="authRegisterForm" style="display:none">
       <input type="email" id="authRegEmail" placeholder="Email">
@@ -985,6 +988,27 @@
 
 <script id="firebase-init">
 (function(){
+  function hideAuthScreen(){ var s=document.getElementById('authScreen'); if(s) s.classList.add('hidden'); var b=document.getElementById('authUserBar'); if(b) b.style.display='none'; }
+  function isOfflineChosen(){ try { return localStorage.getItem('naza_offline_mode')==='1'; } catch(e){ return false; } }
+  // Se o usuário já escolheu offline antes, nem mostra a tela de login (evita travar).
+  if (isOfflineChosen()) { try { hideAuthScreen(); } catch(e){} }
+
+  // FALLBACK: Firebase não carregou (celular sem internet, CDN bloqueada, abrir arquivo local).
+  // Nesse caso o app NÃO pode ficar preso no login — habilita o modo offline.
+  if (typeof firebase === 'undefined' || !firebase.initializeApp) {
+    // Stubs seguros para o resto do código não quebrar sem Firebase (tudo segue local).
+    window.auth = { currentUser: null, onAuthStateChanged: function(cb){ try { cb(null); } catch(e){} }, signOut: function(){}, setPersistence: function(){ return Promise.resolve(); } };
+    window.db = null;
+    window.authManager = {
+      showRegister(){}, showLogin(){},
+      login(){ var e=document.getElementById('authError'); if(e) e.textContent='Sem internet para login. Toque em "USAR SEM LOGIN (OFFLINE)".'; },
+      register(){ var e=document.getElementById('authRegError'); if(e) e.textContent='Sem internet. Use o modo offline.'; },
+      useOffline(){ try{ localStorage.setItem('naza_offline_mode','1'); }catch(e){} hideAuthScreen(); },
+      logout(){ try{ localStorage.removeItem('naza_offline_mode'); }catch(e){} location.reload(); }
+    };
+    return;
+  }
+
   // Firebase config - chave API é publica/publishable (segura no frontend)
   const fbConfig = {
     apiKey: "AIzaSyAltk4f6Nbhxa7hJaGkSCdpb2V0khtWPo8",
@@ -1040,8 +1064,14 @@
       try { await auth.createUserWithEmailAndPassword(email, pass); } 
       catch(e) { document.getElementById('authRegError').textContent = e.message; }
     },
+    useOffline() {
+      try { localStorage.setItem('naza_offline_mode', '1'); } catch(e){}
+      hideAuthScreen();
+    },
     logout() {
+      try { localStorage.removeItem('naza_offline_mode'); } catch(e){}
       auth.signOut();
+      var s = document.getElementById('authScreen'); if (s) s.classList.remove('hidden');
     }
   };
 
@@ -1073,7 +1103,9 @@
       setTimeout(() => startCloudWhenReady(user.uid), 0);
     } else {
       if (window.cloudSync) cloudSync.stopSync();
-      screen.classList.remove('hidden');
+      // Respeita o modo offline: não volta a prender o usuário na tela de login.
+      if (isOfflineChosen()) screen.classList.add('hidden');
+      else screen.classList.remove('hidden');
       if (userBar) userBar.style.display = 'none';
     }
   });
